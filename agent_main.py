@@ -11,7 +11,7 @@ import os
 from langchain_openai import ChatOpenAI
 from langgraph.graph import START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from participant import participant_creation
+from participant import participant_creation, reset_agents
 from tts import tts_generate
 from tools import append_line_to_file
     # ---------- LLM Setup ----------
@@ -22,8 +22,6 @@ import os
 # load environment variables from .env file
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 # Use a lightweight GPT model by default, can be overridden with env var GPT_MODEL
 MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
 
@@ -43,7 +41,7 @@ llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
 
 def init(state: BookAgentState):
-
+    reset_agents()
     participants=participant_creation()
     participants_name=participants.keys()
     state["participants_name"]=list(participants_name)
@@ -69,12 +67,12 @@ def init(state: BookAgentState):
 def assistant(state: BookAgentState):
     # make the discussion run until 100 messages are reached
     last=0 #Number of messages since the last president intervention
-    while len(state["messages"])<100:
+    while len(state["messages"])<state.get("max_messages", 100):
         next_speaker = choose_next(state,last)
         
         if next_speaker == "President": #Make the president speak and fine a new topic
             last=0 
-            new_topic,new_message = president(
+            new_topic,new_message,_ = president(
                 state["messages"],
                 state["book"],
                 state["topics_history"],
@@ -88,7 +86,7 @@ def assistant(state: BookAgentState):
         
         else: #Make a participant speak
             last+=1
-            new_message = make_speak(
+            new_message, _ = make_speak(
                 state["messages"],
                 state["book"],
                 state["topics_history"],
@@ -104,6 +102,7 @@ def assistant(state: BookAgentState):
 
 
 def controlled_init(state: BookAgentState):
+    reset_agents()
     #Does'nt activate the fact that the user is part of the participants
     participants=participant_creation()
     participants_name=participants.keys()
@@ -159,6 +158,5 @@ def controlled_assistant(state: BookAgentState, last:int, force_question:Optiona
     
     
     return state , next_speaker, filepath
-
 
 

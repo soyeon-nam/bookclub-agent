@@ -4,9 +4,6 @@ import os
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-
 llm = ChatOpenAI(model="gpt-4o")
 
 action_list = ["Normal 1","Normal 2", "Questionning", "Thinking", "Angry", "Happy", "Sad" ]

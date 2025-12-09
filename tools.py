@@ -4,7 +4,7 @@ import shutil
 from langchain_core.tools import tool
 from typing import List, Tuple
 from agentstate import BookAgentState
-from participant import participant_get_speak, participant_turn_signal
+from participant import participant_get_speak, participant_turn_signal, rollback_agents
 from typing import Union, Tuple
 import requests
 import os
@@ -52,6 +52,8 @@ def choose_next(state,last) -> str:
         name for name in state["participants_name"]
         if name != state.get("user_name")
     ]
+    if not candidate_names:
+        raise ValueError("At least one AI participant is required")
 
     signals = []
     for name in candidate_names:
@@ -74,6 +76,7 @@ def choose_next(state,last) -> str:
         signals.append(signal)
 
     president_allowed = last > 10
+    valid_choices = candidate_names + (["President"] if president_allowed else [])
     prompt = (
         f"You are the central discussion router for a book club about '{state['book']}'.\n"
         f"Current topic: {current_topic}\n"
@@ -86,21 +89,16 @@ def choose_next(state,last) -> str:
         "- Vary the flow naturally and avoid repetitive back-and-forth patterns.\n"
         "- Choose President only if president eligible is true and the discussion seems stale, blocked, or needs a new angle.\n"
         "- Never choose the user.\n"
-        f"Return only one name from this list: {', '.join(candidate_names)}, President."
+        f"Return only one name from this list: {', '.join(valid_choices)}."
     )
     llm = ChatOpenAI(model=MODEL_NAME)
     response = llm.invoke([HumanMessage(content=prompt)])
 
-    text = (getattr(response, "text", None) or getattr(response, "content", None) or str(response)).strip()
-    cleaned = text.splitlines()[0].strip().strip(".:,;!?'\"")
+    text = response.content.strip()
+    cleaned = text.splitlines()[0].strip().strip(".:,;!?'\"") if text else ""
 
-    valid_choices = set(candidate_names + ["President"])
     if cleaned in valid_choices:
         return cleaned
-
-    for choice in valid_choices:
-        if choice in text:
-            return choice
 
     ranked_signals = sorted(
         signals,
@@ -151,7 +149,11 @@ def make_speak(messages:list[str] ,book_name: str, topic_discussion: str, name: 
     filename = f"{name}_{timestamp}.wav"
     filepath = os.path.join(output_dir, filename)
 
-    tts_generate(participant_message, name, filepath)
+    try:
+        tts_generate(participant_message, name, filepath)
+    except Exception:
+        rollback_agents([f"{name}: {participant_message}"])
+        raise
 
 
     new_message = f"{name}: {participant_message}\n"
@@ -192,23 +194,26 @@ def president(messages: list[str], book_name: str, topic_discussion: str) -> str
 
     llm = ChatOpenAI(model=MODEL_NAME)
     response = llm.invoke([HumanMessage(content=prompt)])
-    text = getattr(response, "text", None) or str(response)
+    text = response.content
     new_topic = text.strip()
-    topic_discussion.append(new_topic)
+    if not new_topic:
+        raise ValueError("The model returned an empty topic")
 
 
     # Generate message
     prompt = (
         f"You are the president of a book club discussing '{book_name}'. "
-        f"Introduce a concise, engaging question or topic about '{topic_discussion[-1]}' that encourages discussion among participants. "
+        f"Introduce a concise, engaging question or topic about '{new_topic}' that encourages discussion among participants. "
         f"Use one or two sentences and speak like a real human. Do not add extra explanation. "
         f"Recent conversation history:\n{chr(10).join(recent)}"
     )
 
     llm = ChatOpenAI(model=MODEL_NAME)
     response = llm.invoke([HumanMessage(content=prompt)])
-    text = getattr(response, "text", None) or str(response)
+    text = response.content
     text = text.strip()
+    if not text:
+        raise ValueError("The model returned an empty president message")
 
     output_dir = "dialogue_audio"
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

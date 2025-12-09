@@ -138,8 +138,7 @@ class DiscussionController:
         else:
             self.last_user += 1
 
-        # self.state, speaker, audio_path = controlled_assistant(self.state, self.last, force)
-        self.state, speaker, audio_path = controlled_assistant(self.state, 0, force)
+        self.state, speaker, audio_path = controlled_assistant(self.state, self.last, force)
         action = choose_action(self.state["messages"][-1] if self.state["messages"] else "")
         self.audio_action.append([speaker, audio_path, action])
         print(f"{speaker} spoke. Audio file at: {audio_path}, action chosen: {action}")
@@ -174,7 +173,7 @@ class DiscussionController:
 
     def stop(self):
         self.is_running = False
-        shutil.move("book_club_conversation.txt", f"conversation_log/{self.state["user_name"]}_ConversationLog.txt")
+        shutil.move("book_club_conversation.txt", f"conversation_log/{self.state['user_name']}_ConversationLog.txt")
         if self.stt_thread:
             self.stt_thread.join()
 

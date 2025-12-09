@@ -17,63 +17,25 @@ VOICES={
     "Jordan_Fields": "voices/en_US-norman-medium.onnx",
 }
 
-# --- piper ---
-if sys.platform == "win32":
-    scripts_dir = os.path.join(sys.prefix, 'Scripts')
-    PIPER_EXE_PATH = os.path.join(scripts_dir, 'piper.exe')
-else:
-    bin_dir = os.path.join(sys.prefix, 'bin')
-    PIPER_EXE_PATH = os.path.join(bin_dir, 'piper')
-
-if not os.path.exists(PIPER_EXE_PATH):
-    print(f"ERROR: 'piper' executable not found at path: {PIPER_EXE_PATH}")
-    print("Please run 'pip install piper-tts' to install it")
-
-# --- TTS ---
+# Run Piper in this interpreter so its NumPy/ONNX dependencies come from the
+# project's virtual environment, rather than a different global installation.
 def tts_generate(text: str, speaker: str, output_filename: str) -> str:
-    """
-    Generate speech audio from text using Piper TTS.
-
-    Args:
-        text (str): The text to convert to speech.
-        speaker (str): The path to the speaker model file.
-        output_filename (str): The filename to save the output audio.
-
-    Returns:
-        str: The path to the generated audio file.
-    """
-    os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-    # cmd = f'piper --model {VOICES[speaker]} --output-file {output_filename}  "{text}"'
-    # os.system(cmd)
-    # return output_filename
-
+    model_path = VOICES[speaker]
+    if not os.path.isfile(model_path):
+        raise FileNotFoundError(f"Missing Piper voice model: {model_path}")
+    os.makedirs(os.path.dirname(output_filename) or ".", exist_ok=True)
     com_env = os.environ.copy()
     com_env["PYTHONUTF8"] = "1"
     com_env["PYTHONIOENCODING"] = "utf-8"
-
     try:
-        result = subprocess.run(
-            [
-                PIPER_EXE_PATH,
-                '--model', VOICES[speaker],
-                '--output-file', output_filename
-            ],
-            input=text.encode('utf-8', 'ignore'),
-            env=com_env,
-            capture_output=True,
-            check=True
+        subprocess.run(
+            [sys.executable, "-m", "piper", "--model", model_path,
+             "--output-file", output_filename],
+            input=text.encode("utf-8"), env=com_env, capture_output=True,
+            check=True, timeout=120,
         )
-        return output_filename
-    except FileNotFoundError:
-        print(f"FATAL ERROR: 'piper' executable not found at path: {PIPER_EXE_PATH}")
-        raise
-    except subprocess.CalledProcessError as e:
-        print(f"PIPER TTS ERROR: {e.stderr.decode('utf-8', errors='ignore')}")
-        raise
-
-
-# tts_generate("Hello, this is a test.", "Riley_Stone", os.path.join(output_dir, "test_riley_stone.wav"))
-# tts_generate("Hello, this is a test.", "Dr_Harold", os.path.join(output_dir, "test_dr_harold.wav"))
-# tts_generate("Hello, this is a test.", "Senator_Clark", os.path.join(output_dir, "test_senator_clark.wav"))
-# tts_generate("Hello, this is a test.", "Tommy_Reed", os.path.join(output_dir, "test_tommy_reed.wav"))
-# tts_generate("Hello, this is a test.", "president", os.path.join(output_dir, "test_president.wav"))
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+        if os.path.exists(output_filename):
+            os.remove(output_filename)
+        raise RuntimeError("Piper synthesis failed; check piper-tts and numpy<2 in the active environment") from error
+    return output_filename

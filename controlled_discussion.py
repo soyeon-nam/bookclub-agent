@@ -1,76 +1,89 @@
-from agent_main import controlled_init,controlled_assistant
-from agentstate import BookAgentState
+"""Interactive book-club discussion with synchronized memory rollback."""
+from copy import deepcopy
 import os
-from agent_main import init, assistant
-from tools import append_line_to_file
+
+from agent_main import controlled_init, controlled_assistant
 from action import choose_action
 from participant import rollback_agents
-#This is a simple controlled discussion loop script
-# It allows to control when the discussion continues, and to add user messages or rollback the discussion by a number of messages
-# Must be use for a controlled discussion when a real play can interact
+from tools import append_line_to_file
 
 
+def turns_since(messages, speaker):
+    for count, message in enumerate(reversed(messages)):
+        if message.split(":", 1)[0].strip().lower() == speaker.lower():
+            return count
+    return len(messages)
 
 
-# Build an empty BookAgentState (all fields empty / None as requested)
-state: BookAgentState = {
-    "messages": [],
-    "book": "pinocchio",
-    "book_summary": "",
-    "participants_name": [],
-    "user_name": "Soyeon",
-    "topics_hystory": [],
-}
-audio_action=[] #List of [Character_name, audio_file_path,action]
-state = controlled_init(state)
-audio_action.append(["President", os.path.join("dialogue_audio", "President_Introduction.wav"), "Normal 1"])
-
-last=0
-last_user=0
-while True:
-    user_input = input("Continuation of the discussion? (type 'end' to stop, 'c' to continue, a sentence for a user message): ")
-    # Check if the user wants to exit
-    if user_input.lower() == "end":
-        print("End of the discussion.")
-    elif user_input.lower() == "c":
-        force=False
-        if last_user>10:
-            last_user=0
-            force=True
-
-        
-        state,speaker,filepath=controlled_assistant(state,last,force)
-        print(state["messages"][-1])
-        action = choose_action(state["messages"][-1] if state["messages"] else "")
-        audio_action.append([speaker,filepath, action])
-        print(f"{speaker} spoke. Audio file at: {filepath}, action chosen: {action}")   
-        if force:
-            print(f"Wait for the participant {state['user_name']} to answer the question.")
-        
-    elif user_input.strip() == "replace":
-        user_input = input("Number of roleback sentences wanted?: ")
-        num_rollback = int(user_input)
-        if num_rollback >= len(state["messages"]):
-            print("Cannot rollback that many messages.")
-        else:
-            removed = state["messages"][-num_rollback:]
-            state["messages"] = state["messages"][:-num_rollback]
+def run_cli():
+    state = {
+        "messages": [], "book": "pinocchio", "book_summary": "",
+        "participants_name": [], "user_name": "Soyeon", "topics_history": [],
+    }
+    # Each invocation is a new session; rollback also updates this transcript.
+    with open("book_club_conversation.txt", "w", encoding="utf-8"):
+        pass
+    state = controlled_init(state)
+    audio_action = [["President", os.path.join("dialogue_audio", "President_Introduction.wav"), "Normal 1"]]
+    snapshots = []
+    while True:
+        try:
+            command = input("Continue: c | end | replace | your message: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("End of the discussion.")
+            return state
+        if command.lower() == "end":
+            print("End of the discussion.")
+            return state
+        if not command:
+            continue
+        if command.lower() == "replace":
+            try:
+                count = int(input("Number of messages to roll back: "))
+            except ValueError:
+                print("Enter a positive whole number.")
+                continue
+            except (EOFError, KeyboardInterrupt):
+                print("End of the discussion.")
+                return state
+            if count <= 0 or count > len(snapshots):
+                print("Cannot roll back that many messages; keep the opening message.")
+                continue
+            removed = state["messages"][-count:]
             rollback_agents(removed)
-    else:
-        # User message
-        speaker=state["user_name"]
-        user_message = f"{state['user_name']}: {user_input}\n"
-        state["messages"].append(user_message)
-        append_line_to_file("book_club_conversation.txt", user_message)
-        print(f"{speaker} spoke. No audio file generated for user messages.")
-    if speaker!="President":
-        last+=1
-    if speaker=="President":
-        last=0
-    if speaker!=state["user_name"]:
-        last_user+=1
-    if speaker==state["user_name"]:
-        last_user=0
-       
+            state, audio_count = snapshots[-count]
+            del snapshots[-count:]
+            del audio_action[audio_count:]
+            with open("book_club_conversation.txt", "w", encoding="utf-8") as transcript:
+                transcript.write("\n".join(m.rstrip() for m in state["messages"]) + "\n")
+            print(f"Rolled back {count} message(s).")
+            continue
+
+        before = (deepcopy(state), len(audio_action))
+        if command.lower() == "c":
+            last = turns_since(state["messages"], "President")
+            force = turns_since(state["messages"], state["user_name"]) > 10
+            state, speaker, filepath = controlled_assistant(state, last, force)
+            print(state["messages"][-1])
+            try:
+                action = choose_action(state["messages"][-1])
+            except Exception as error:
+                print(f"Animation classification failed ({type(error).__name__}); using Normal 1.")
+                action = "Normal 1"
+            audio_action.append([speaker, filepath, action])
+            print(f"{speaker} spoke. Audio file at: {filepath}, action: {action}")
+            if force:
+                print(f"Waiting for {state['user_name']}'s response.")
+        else:
+            message = f"{state['user_name']}: {command}"
+            state["messages"].append(message)
+            append_line_to_file("book_club_conversation.txt", message)
+        snapshots.append(before)
 
 
+if __name__ == "__main__":
+    try:
+        run_cli()
+    except Exception as error:
+        print(f"Discussion stopped ({type(error).__name__}). Check API access and the audio setup.")
+        raise SystemExit(1)

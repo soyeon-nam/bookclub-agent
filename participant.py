@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
-MODEL_NAME = "gpt-4o-mini"
+MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
 TURN_SIGNAL_STYLE = os.getenv("TURN_SIGNAL_STYLE", "balanced").strip().lower()
 
 TURN_SIGNAL_PROMPTS = {
@@ -171,6 +171,7 @@ class ParticipantAgent:
         prompt = (
             f"You are part of a book club discussion and will speak about the book and your experience related to book, be natural and not too serious. Speak naturally in one or two sentences. "
             f"The book being discussed: {book_description}\n"
+            f"Current topic: {topic_discussion}\n"
             f"Recent conversation history:\n{recent_historic}\n"
             f"- DO NOT soften your stance. Have a clear personal take."
             f"- You are free to disagree or challenge what was said."
@@ -188,12 +189,15 @@ class ParticipantAgent:
         # system + 최근 히스토리 + 새 메시지
         messages = [self.system_message] + self.history[-self.MAX_HISTORY:] + [HumanMessage(content=prompt)]
         response = self.llm.invoke(messages)
+        text = response.content.strip()
+        if not text:
+            raise ValueError(f"The model returned an empty message for {self.name}")
 
         # 히스토리에 추가 (이 캐릭터만의 기억)
         self.history.append(HumanMessage(content=prompt))
-        self.history.append(AIMessage(content=response.content))
+        self.history.append(AIMessage(content=text))
 
-        return response.content.strip()
+        return text
 
     def turn_signal(self, book_description: str, recent_historic: str,
                     topic_discussion: str, user: str = "") -> dict:
@@ -212,7 +216,9 @@ class ParticipantAgent:
 
         try:
             signal = json.loads(text)
-        except json.JSONDecodeError:
+            if not isinstance(signal, dict):
+                raise ValueError("Turn signal must be an object")
+        except (ValueError, TypeError):
             signal = {"want_to_speak": False, "score": 0, "reason": "Invalid JSON", "target": "none"}
 
         score = signal.get("score", 0)
@@ -223,7 +229,7 @@ class ParticipantAgent:
 
         return {
             "speaker": self.name,
-            "want_to_speak": bool(signal.get("want_to_speak", False)),
+            "want_to_speak": signal.get("want_to_speak") is True,
             "score": max(0, min(10, score)),
             "reason": str(signal.get("reason", "No reason provided")).strip()[:120],
             "target": str(signal.get("target", "none")).strip()[:80] or "none",
@@ -259,6 +265,12 @@ def participant_turn_signal(name: str, book_description: str = "", recent_histor
 
 def participant_creation() -> dict:
     return dict(PARTICIPANT_DESCRIPTIONS)
+
+
+def reset_agents():
+    """Start a new discussion without retaining the previous session's memory."""
+    for agent in AGENTS.values():
+        agent.history.clear()
 
 
 def rollback_agents(removed_messages: list):

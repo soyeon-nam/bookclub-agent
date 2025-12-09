@@ -1,12 +1,9 @@
-# Requirements for ConversationAgent
-# Note: `piper` is a system CLI used by `tts.py` (not a Python package).
-
-langchain-core
-langchain-openai
-langgraph
-google-generativeai
-requests
-# dotenv
-python-dotenv
-piper
-google-genai
+# Verified runtime versions (Python 3.9+).
+langchain-core==0.3.80
+langchain-openai==0.3.35
+langgraph==0.6.11
+python-dotenv==1.2.1
+requests>=2,<3
+piper-tts==1.3.0
+onnxruntime==1.16.3
+numpy==1.26.4
