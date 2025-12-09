@@ -7,7 +7,7 @@ from agentstate import BookAgentState
 from agent_main import init, assistant
 from tools import append_line_to_file
 from action import choose_action, action_to_id
-from participant import participant_creation
+from participant import participant_creation, rollback_agents
 from ring_buffer import RingBufferWithMetadata
 from buffer_manager import TTSManager, STTManager
 
@@ -79,7 +79,9 @@ class DiscussionController:
                 if seq - 1 > len(self.state["messages"]):
                     print("Cannot rollback that many messages.")
                 else:
+                    removed = self.state["messages"][seq-1:]
                     self.state["messages"] = self.state["messages"][:seq-1]
+                    rollback_agents(removed)
 
                 speaker = self.state["user_name"]
                 user_message = f"{speaker}: {text}\n"

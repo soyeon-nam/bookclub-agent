@@ -259,3 +259,17 @@ def participant_turn_signal(name: str, book_description: str = "", recent_histor
 
 def participant_creation() -> dict:
     return dict(PARTICIPANT_DESCRIPTIONS)
+
+
+def rollback_agents(removed_messages: list):
+    """
+    롤백으로 제거된 메시지들을 받아, 해당 화자의 agent history도 함께 롤백.
+    removed_messages: 제거된 메시지 리스트 (최신 순서로 처리)
+    """
+    for message in reversed(removed_messages):
+        speaker = message.split(":")[0].strip()
+        if speaker in AGENTS:
+            agent = AGENTS[speaker]
+            # history는 [HumanMessage, AIMessage] 쌍으로 쌓이므로 2개씩 제거
+            if len(agent.history) >= 2:
+                agent.history = agent.history[:-2]

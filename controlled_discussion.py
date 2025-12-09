@@ -4,6 +4,7 @@ import os
 from agent_main import init, assistant
 from tools import append_line_to_file
 from action import choose_action
+from participant import rollback_agents
 #This is a simple controlled discussion loop script
 # It allows to control when the discussion continues, and to add user messages or rollback the discussion by a number of messages
 # Must be use for a controlled discussion when a real play can interact
@@ -52,7 +53,9 @@ while True:
         if num_rollback >= len(state["messages"]):
             print("Cannot rollback that many messages.")
         else:
+            removed = state["messages"][-num_rollback:]
             state["messages"] = state["messages"][:-num_rollback]
+            rollback_agents(removed)
     else:
         # User message
         speaker=state["user_name"]
