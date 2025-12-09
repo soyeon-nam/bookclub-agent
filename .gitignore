@@ -1,0 +1,10 @@
+.env
+*.env
+
+voices/
+
+book_club_conversation.txt
+conversation_log/
+
+dialogue_audio/
+__pycache__/
