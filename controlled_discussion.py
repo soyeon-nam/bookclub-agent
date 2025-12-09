@@ -14,10 +14,10 @@ from action import choose_action
 # Build an empty BookAgentState (all fields empty / None as requested)
 state: BookAgentState = {
     "messages": [],
-    "book": "The courage to be disliked",
+    "book": "pinocchio",
     "book_summary": "",
     "participants_name": [],
-    "user_name": "Léonard",
+    "user_name": "Soyeon",
     "topics_hystory": [],
 }
 audio_action=[] #List of [Character_name, audio_file_path,action]

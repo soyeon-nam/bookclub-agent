@@ -49,13 +49,13 @@ def init(state: BookAgentState):
     state["participants_name"]=list(participants_name)
     state["participants_name"].append(state["user_name"])
     # Generate a short summary using the configured lightweight GPT model
-    summary_prompt = "write a short summary of 100 words about "+state["book"]+" the book Les Misérables by Victor Hugo"
-    summary_resp = llm.invoke([SystemMessage(content=summary_prompt)])
+    summary_prompt = "write a short summary of 100 words about "+state["book"] #+"by"+state["author"]
+    summary_resp = llm.invoke([HumanMessage(content=summary_prompt)]) # SystemMessage 수정
     
     book_summary =  summary_resp.content.strip()
     state["book_summary"]=book_summary
 
-    mes="Welcome everyone ! Lets talk about "+ state["book"] +", to start, did you guys liked the book?"
+    mes="Welcome everyone! Lets talk about "+ state["book"] +", to start, did you guys liked the book?"
     presmes="President: "+mes   
     messages= [presmes]
 
@@ -109,7 +109,7 @@ def controlled_init(state: BookAgentState):
     participants_name=participants.keys()
     state["participants_name"]=list(participants_name)
     # Generate a short summary using the configured lightweight GPT model
-    summary_prompt = "write a short summary of 100 words about "+state["book"]+" the book Les Misérables by Victor Hugo"
+    summary_prompt = "write a short summary of 100 words about "+state["book"]
     summary_resp = llm.invoke([SystemMessage(content=summary_prompt)])
     
     book_summary =  summary_resp.content.strip()
