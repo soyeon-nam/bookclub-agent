@@ -7,14 +7,22 @@ voice_path = "voices/en_US-danny-low.onnx"
 output_dir = "dialogue_audio"
 os.makedirs(output_dir, exist_ok=True)
 
-VOICES={
-    "Riley_Stone": "voices/en_US-kristin-medium.onnx",
-    "Dr_Harold": "voices/en_US-john-medium.onnx",
-    "Senator_Clark": "voices/en_US-kusal-medium.onnx",
-    "Tommy_Reed": "voices/en_US-bryce-medium.onnx",
-    "president": "voices/en_US-ryan-high.onnx",
-    "Evelyn_Moss": "voices/en_US-amy-medium.onnx",
-    "Jordan_Fields": "voices/en_US-norman-medium.onnx",
+VOICES = {
+    'Yoon_Jae': 'voices/en_US-john-medium.onnx',
+    'Seo_Yeon': 'voices/en_US-amy-medium.onnx',
+    'Dr_Noh': 'voices/en_US-bryce-medium.onnx',
+    'Han_Jun': 'voices/en_US-norman-medium.onnx',
+    'Chef_Baek': 'voices/en_US-kusal-medium.onnx',
+    'Minji_Kang': 'voices/en_US-kristin-medium.onnx',
+    'Dr_Shin': 'voices/en_US-amy-medium.onnx',
+    'Jay_Park': 'voices/en_US-norman-medium.onnx',
+    'president': 'voices/en_US-ryan-high.onnx',
+    'Riley_Stone': 'voices/en_US-kristin-medium.onnx',
+    'Dr_Harold': 'voices/en_US-john-medium.onnx',
+    'Senator_Clark': 'voices/en_US-kusal-medium.onnx',
+    'Tommy_Reed': 'voices/en_US-bryce-medium.onnx',
+    'Evelyn_Moss': 'voices/en_US-amy-medium.onnx',
+    'Jordan_Fields': 'voices/en_US-norman-medium.onnx',
 }
 
 # Run Piper in this interpreter so its NumPy/ONNX dependencies come from the

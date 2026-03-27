@@ -1,6 +1,7 @@
 """Run an automated discussion (message limit includes the opening)."""
 import argparse
 from agent_main import init, assistant
+from participant import get_all_participant_names
 
 
 def main():
@@ -8,12 +9,13 @@ def main():
     parser.add_argument("--book", default="Les misérables")
     parser.add_argument("--user", default="Léonard")
     parser.add_argument("--max-messages", type=int, default=100)
+    parser.add_argument("--participants", nargs="+", choices=get_all_participant_names())
     args = parser.parse_args()
     if args.max_messages < 1:
         parser.error("--max-messages must be positive")
     state = {
         "messages": [], "book": args.book, "book_summary": "",
-        "participants_name": [], "user_name": args.user,
+        "participants_name": args.participants or [], "user_name": args.user,
         "topics_history": [], "max_messages": args.max_messages,
     }
     with open("book_club_conversation.txt", "w", encoding="utf-8"):

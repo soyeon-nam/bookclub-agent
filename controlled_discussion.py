@@ -1,10 +1,11 @@
 """Interactive book-club discussion with synchronized memory rollback."""
+import argparse
 from copy import deepcopy
 import os
 
 from agent_main import controlled_init, controlled_assistant
 from action import choose_action
-from participant import rollback_agents
+from participant import rollback_agents, get_all_participant_names
 from tools import append_line_to_file
 
 
@@ -15,10 +16,10 @@ def turns_since(messages, speaker):
     return len(messages)
 
 
-def run_cli():
+def run_cli(participants=None, book="pinocchio", user="Soyeon"):
     state = {
-        "messages": [], "book": "pinocchio", "book_summary": "",
-        "participants_name": [], "user_name": "Soyeon", "topics_history": [],
+        "messages": [], "book": book, "book_summary": "",
+        "participants_name": participants or [], "user_name": user, "topics_history": [],
     }
     # Each invocation is a new session; rollback also updates this transcript.
     with open("book_club_conversation.txt", "w", encoding="utf-8"):
@@ -83,7 +84,12 @@ def run_cli():
 
 if __name__ == "__main__":
     try:
-        run_cli()
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--book", default="pinocchio")
+        parser.add_argument("--user", default="Soyeon")
+        parser.add_argument("--participants", nargs="+", choices=get_all_participant_names())
+        args = parser.parse_args()
+        run_cli(args.participants, args.book, args.user)
     except Exception as error:
         print(f"Discussion stopped ({type(error).__name__}). Check API access and the audio setup.")
         raise SystemExit(1)

@@ -41,13 +41,21 @@ llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
     # ---------- Nodes ----------
 
 
+def session_participants(state, include_user=False):
+    names = list(participant_creation(state.get("participants_name")))
+    user = state.get("user_name", "")
+    if not isinstance(user, str) or not user.strip() or ":" in user or "\n" in user or "\r" in user:
+        raise ValueError("User name must be nonempty and contain no colon or newline")
+    if user.casefold() in {name.casefold() for name in names + ["President"]}:
+        raise ValueError("User name must differ from the selected participants and President")
+    return names + ([user] if include_user else [])
+
+
 def init(state: BookAgentState):
+    names = session_participants(state, include_user=True)
     reset_agents()
     init_rag(state["book"])
-    participants=participant_creation()
-    participants_name=participants.keys()
-    state["participants_name"]=list(participants_name)
-    state["participants_name"].append(state["user_name"])
+    state["participants_name"] = names
     # Generate a short summary using the configured lightweight GPT model
     summary_prompt = "write a short summary of 100 words about "+state["book"] #+"by"+state["author"]
     summary_resp = llm.invoke([HumanMessage(content=summary_prompt)]) # SystemMessage 수정
@@ -104,12 +112,11 @@ def assistant(state: BookAgentState):
 
 
 def controlled_init(state: BookAgentState):
+    names = session_participants(state)
     reset_agents()
     init_rag(state["book"])
     #Does'nt activate the fact that the user is part of the participants
-    participants=participant_creation()
-    participants_name=participants.keys()
-    state["participants_name"]=list(participants_name)
+    state["participants_name"] = names
     # Generate a short summary using the configured lightweight GPT model
     summary_prompt = "write a short summary of 100 words about "+state["book"]
     summary_resp = llm.invoke([SystemMessage(content=summary_prompt)])
