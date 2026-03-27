@@ -10,3 +10,6 @@ conversation_log/
 dialogue_audio/
 __pycache__/
 .venv/
+
+# Local book sources are runtime inputs, not generated application code.
+books/*.txt

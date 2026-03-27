@@ -14,6 +14,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from participant import participant_creation, reset_agents
 from tts import tts_generate
 from tools import append_line_to_file
+from rag import init_rag
     # ---------- LLM Setup ----------
 
 from dotenv import load_dotenv
@@ -42,6 +43,7 @@ llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
 
 def init(state: BookAgentState):
     reset_agents()
+    init_rag(state["book"])
     participants=participant_creation()
     participants_name=participants.keys()
     state["participants_name"]=list(participants_name)
@@ -103,6 +105,7 @@ def assistant(state: BookAgentState):
 
 def controlled_init(state: BookAgentState):
     reset_agents()
+    init_rag(state["book"])
     #Does'nt activate the fact that the user is part of the participants
     participants=participant_creation()
     participants_name=participants.keys()
@@ -158,5 +161,4 @@ def controlled_assistant(state: BookAgentState, last:int, force_question:Optiona
     
     
     return state , next_speaker, filepath
-
 
