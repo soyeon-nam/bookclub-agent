@@ -292,7 +292,8 @@ class ParticipantAgent:
         return analyze(query_prompt, fallback_query), analyze(intent_prompt, "")
 
     def get_speak(self, book_description: str, recent_historic: str,
-                  topic_discussion: str, force: bool = False, user: str = "") -> str:
+                  topic_discussion: str, force: bool = False, user: str = "",
+                  discussion_summary: str = "", repetition_warning: str = "") -> str:
         if isinstance(recent_historic, (list, tuple)):
             last_message = str(recent_historic[-1]) if recent_historic else ""
         else:
@@ -324,12 +325,18 @@ class ParticipantAgent:
             "or claim these excerpts contain facts they do not support.\n"
             if passages else ""
         )
+        summary_section = (
+            f"Points already discussed (do NOT repeat these):\n{discussion_summary}\n\n"
+            if discussion_summary else ""
+        )
         prompt = (
             f"You are part of a book club discussion and will speak about the book and your experience related to book, be natural and not too serious. Speak naturally in one or two sentences. "
             f"The book being discussed: {book_description}\n"
             f"Current topic: {topic_discussion}\n"
             f"{rag_section}"
             f"{user_context}"
+            f"{summary_section}"
+            f"{repetition_warning}\n"
             f"Recent conversation history:\n{recent_historic}\n"
             f"- DO NOT soften your stance. Have a clear personal take."
             f"- You are free to disagree or challenge what was said."
@@ -404,12 +411,14 @@ AGENTS: dict[str, ParticipantAgent] = {
 # ---------- 기존 participant.py와 동일한 인터페이스 ----------
 
 def participant_get_speak(name: str, book_description: str = "", recent_historic: str = "",
-                          topic_discussion: str = "", force: bool = False, user: str = "") -> str:
+                          topic_discussion: str = "", force: bool = False, user: str = "",
+                          discussion_summary: str = "", repetition_warning: str = "") -> str:
     if name not in AGENTS:
         raise ValueError(f"Unknown participant: {name}")
     if name == user:
         raise ValueError("participant_get_speak should not be called for the user participant")
-    return AGENTS[name].get_speak(book_description, recent_historic, topic_discussion, force, user)
+    return AGENTS[name].get_speak(book_description, recent_historic, topic_discussion, force, user,
+                                  discussion_summary, repetition_warning)
 
 
 def participant_turn_signal(name: str, book_description: str = "", recent_historic: str = "",

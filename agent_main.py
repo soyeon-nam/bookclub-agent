@@ -51,27 +51,41 @@ def session_participants(state, include_user=False):
     return names + ([user] if include_user else [])
 
 
-def init(state: BookAgentState):
-    names = session_participants(state, include_user=True)
+def _initialize_session(state: BookAgentState, include_user=False):
+    names = session_participants(state, include_user=include_user)
     reset_agents()
     init_rag(state["book"])
-    state["participants_name"] = names
-    # Generate a short summary using the configured lightweight GPT model
-    summary_prompt = "write a short summary of 100 words about "+state["book"] #+"by"+state["author"]
-    summary_resp = llm.invoke([HumanMessage(content=summary_prompt)]) # SystemMessage 수정
-    
-    book_summary =  summary_resp.content.strip()
-    state["book_summary"]=book_summary
 
-    mes="Welcome everyone! Lets talk about "+ state["book"] +", to start, did you guys liked the book?"
-    presmes="President: "+mes   
-    messages= [presmes]
+    def generate(prompt):
+        text = llm.invoke([HumanMessage(content=prompt)]).content
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError("The model returned an empty session introduction")
+        return text.strip()
 
-    state["topics_history"]=["General impression of the book"]
-    tts_generate(mes, "president", os.path.join("dialogue_audio", "President_Introduction.wav"))
-    append_line_to_file("book_club_conversation.txt", presmes)
-    state["messages"]=messages
+    book_summary = generate("Write a short summary of 100 words about " + state["book"])
+    opening = generate(
+        f"You are the president of a book club about '{state['book']}'.\n"
+        f"Book summary:\n{book_summary}\n\n"
+        "Write a warm, welcoming opening: briefly welcome everyone and ask ONE easy "
+        "warm-up question about a first impression, memorable moment, or character. "
+        "Help everyone feel comfortable talking. Two to three conversational sentences."
+    )
+    if "?" in opening:
+        opening = opening.split("?", 1)[0] + "?"
+    topic = generate(
+        "In one short sentence, what is the core discussion topic in this opening statement?\n"
+        + opening
+    )
+    message = "President: " + opening
+    tts_generate(opening, "president", os.path.join("dialogue_audio", "President_Introduction.wav"))
+    append_line_to_file("book_club_conversation.txt", message)
+    state.update(participants_name=names, book_summary=book_summary,
+                 topics_history=[topic], messages=[message])
     return state
+
+
+def init(state: BookAgentState):
+    return _initialize_session(state, include_user=True)
 
 
 def assistant(state: BookAgentState):
@@ -101,6 +115,7 @@ def assistant(state: BookAgentState):
                 state["book"],
                 state["topics_history"],
                 next_speaker,
+                user=state.get("user_name", ""),
             )
 
         state["messages"].append(new_message)
@@ -112,27 +127,8 @@ def assistant(state: BookAgentState):
 
 
 def controlled_init(state: BookAgentState):
-    names = session_participants(state)
-    reset_agents()
-    init_rag(state["book"])
-    #Does'nt activate the fact that the user is part of the participants
-    state["participants_name"] = names
-    # Generate a short summary using the configured lightweight GPT model
-    summary_prompt = "write a short summary of 100 words about "+state["book"]
-    summary_resp = llm.invoke([SystemMessage(content=summary_prompt)])
-    
-    book_summary =  summary_resp.content.strip()
-    state["book_summary"]=book_summary
+    return _initialize_session(state)
 
-    mes="Welcome everyone ! Lets talk about "+ state["book"] +", to start, did you guys liked the book?"
-    presmes="President: "+mes   
-    messages= [presmes]
-
-    state["topics_history"]=["General impression of the book"]
-    tts_generate(mes, "president", os.path.join("dialogue_audio", "President_Introduction.wav"))
-    append_line_to_file("book_club_conversation.txt", presmes)
-    state["messages"]=messages
-    return state
 
 def controlled_assistant(state: BookAgentState, last:int, force_question:Optional[bool]=False):
     # make 1 message in the discussion
