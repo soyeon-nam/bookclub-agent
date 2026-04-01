@@ -11,6 +11,16 @@ load_dotenv()
 MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
 TURN_SIGNAL_STYLE = os.getenv("TURN_SIGNAL_STYLE", "balanced").strip().lower()
 
+CONVERSATION_MOVES = [
+    "AGREE_AND_EXTEND",    # agree with the point and add something new
+    "DISAGREE_SPECIFIC",   # disagree on a specific detail, not the whole argument
+    "ASK_QUESTION",        # ask a genuine question you're curious about
+    "SHARE_ANECDOTE",      # share a relevant personal experience or example from your domain
+    "REDIRECT",            # shift the angle or bring up a new aspect of the topic
+    "BUILD_ON",            # develop someone else's idea further
+    "REACT_EMOTIONALLY",   # express surprise, excitement, doubt, amusement, etc.
+]
+
 TURN_SIGNAL_PROMPTS = {
     "conservative": """
 You are {name}. {desc}
@@ -254,7 +264,136 @@ class ParticipantAgent:
         self.name = name
         self.llm = ChatOpenAI(model=MODEL_NAME)
         self.system_message = SystemMessage(content=description)
+        self.stance = ""
+        self.stance_unchanged_count = 0
+        self.recent_moves = []
+        self.turn_snapshots = []
         self.history: list = []  # [HumanMessage, AIMessage, ...] 교대로 쌓임
+
+    def _plan_turn(self, book_description: str, recent_historic: str,
+                               topic_discussion: str) -> tuple:
+        """발언 전, 현재 생각을 업데이트하고 다음 대화 행위(move)를 결정."""
+        prior = (
+            f"Your current thinking: {self.stance}"
+            if self.stance else
+            "(You have not spoken yet — this will be your first contribution.)"
+        )
+
+        # stance가 2턴 이상 변하지 않았으면 새로운 각도 유도 (기존 3→2로 강화)
+        staleness_hint = ""
+        if self.stance_unchanged_count >= 2:
+            staleness_hint = (
+                "\nIMPORTANT: You have been making similar points. "
+                "You MUST shift your thinking: adopt something from another speaker's "
+                "argument, discover a contradiction in your own position, or ask "
+                "yourself what you might be WRONG about. Mere rephrasing is not enough."
+            )
+
+        # 최근 사용한 move를 피하도록 안내
+        avoid_moves = ""
+        if self.recent_moves:
+            avoid_moves = f"\nAvoid these conversation moves (used recently): {', '.join(self.recent_moves)}"
+
+        # 반론 강제: 대화 전체 흐름 기반 (기존: 같은 에이전트 3연속 → 개선: 대화 전체 최근 2회)
+        agreement_moves = {"AGREE_AND_EXTEND", "BUILD_ON"}
+        force_disagree = ""
+        # 자기 최근 2회가 동의 계열이면 강제 (기존 3 → 2로 낮춤)
+        if len(self.recent_moves) >= 2 and all(m in agreement_moves for m in self.recent_moves[-2:]):
+            force_disagree = (
+                "\nIMPORTANT: You have been agreeing too much. "
+                "You MUST choose DISAGREE_SPECIFIC or ASK_QUESTION. "
+                "Find something specific you genuinely doubt, disagree with, "
+                "or want to challenge. A real debate requires friction."
+            )
+
+        # 직전 발화가 질문이면 ASK_QUESTION 대신 응답 유도
+        last_was_question = False
+        if isinstance(recent_historic, (list, tuple)) and recent_historic:
+            last_msg = recent_historic[-1] if isinstance(recent_historic[-1], str) else str(recent_historic[-1])
+            last_was_question = last_msg.rstrip().endswith("?")
+        elif isinstance(recent_historic, str):
+            last_line = [l for l in recent_historic.strip().splitlines() if l.strip()]
+            if last_line:
+                last_was_question = last_line[-1].rstrip().endswith("?")
+
+        question_hint = ""
+        if last_was_question:
+            question_hint = (
+                "\nNOTE: The last speaker asked a question. Strongly prefer "
+                "DISAGREE_SPECIFIC, AGREE_AND_EXTEND, BUILD_ON, or SHARE_ANECDOTE "
+                "to actually ANSWER the question rather than ignoring it."
+            )
+
+        prompt = (
+            f"You are {self.name}. Topic being discussed: {topic_discussion}\n"
+            f"Book: {book_description}\n"
+            f"Recent conversation:\n{recent_historic}\n\n"
+            f"{prior}\n"
+            f"{staleness_hint}\n\n"
+            f"Do TWO things:\n\n"
+            f"1. THINKING — In one sentence, state what you're currently thinking about this topic. "
+            f"Your thinking MUST be different from your previous thinking. Show how the discussion "
+            f"has changed, complicated, or deepened your view. "
+            f"Stagnation is not allowed — evolve or question your own position.\n\n"
+            f"2. NEXT_MOVE — Choose exactly one conversation move for your next response:\n"
+            f"   AGREE_AND_EXTEND, DISAGREE_SPECIFIC, ASK_QUESTION, SHARE_ANECDOTE, REDIRECT, BUILD_ON, REACT_EMOTIONALLY\n"
+            f"{avoid_moves}"
+            f"{force_disagree}"
+            f"{question_hint}\n\n"
+            f"Return in this exact format (no extra text):\n"
+            f"THINKING: <your one sentence>\n"
+            f"NEXT_MOVE: <one move name>"
+        )
+        try:
+            text = self.llm.invoke([self.system_message, HumanMessage(content=prompt)]).content
+            if not isinstance(text, str):
+                raise ValueError("Non-text turn plan")
+        except Exception as error:
+            warnings.warn(f"Turn planning unavailable ({type(error).__name__}); using prior stance.", RuntimeWarning)
+            text = ""
+
+
+        # 파싱
+        stance = self.stance  # fallback
+        move = "BUILD_ON"     # fallback
+        for line in text.split("\n"):
+            line = line.strip()
+            if line.upper().startswith("THINKING:"):
+                stance = line.split(":", 1)[1].strip() or self.stance
+            elif line.upper().startswith("NEXT_MOVE:"):
+                parsed_move = line.split(":", 1)[1].strip().upper()
+                if parsed_move in [m for m in CONVERSATION_MOVES]:
+                    move = parsed_move
+
+        # 동의 강제 상황에서 LLM이 무시했으면 코드 레벨에서 강제
+        if force_disagree and move in agreement_moves:
+            move = "DISAGREE_SPECIFIC"
+
+        # 질문 직후 또 질문하면 BUILD_ON으로 전환 (질문 연쇄 방지)
+        if last_was_question and move == "ASK_QUESTION":
+            move = "BUILD_ON"
+
+        # stance 변화 감지: 키워드 기반 (기존 50글자 prefix → 핵심 단어 겹침)
+        if stance and self.stance:
+            old_words = set(self.stance.lower().split())
+            new_words = set(stance.lower().split())
+            # 불용어 제거
+            stopwords = {"the","a","an","is","it","in","of","and","to","that","this","i","my","but","not","be"}
+            old_key = old_words - stopwords
+            new_key = new_words - stopwords
+            if old_key and new_key:
+                overlap = len(old_key & new_key) / max(len(old_key), len(new_key))
+                if overlap > 0.6:  # 60% 이상 겹치면 같은 stance
+                    unchanged_count = self.stance_unchanged_count + 1
+                else:
+                    unchanged_count = 0
+            else:
+                unchanged_count = 0
+        else:
+            unchanged_count = 0
+
+        recent_moves = (self.recent_moves + [move])[-3:]
+        return stance, move, unchanged_count, recent_moves
 
     def _analyze_user_turn(self, book_description, recent_historic, topic, content):
         """Build ephemeral hints; optional analysis never writes personal memory."""
@@ -325,6 +464,9 @@ class ParticipantAgent:
             "or claim these excerpts contain facts they do not support.\n"
             if passages else ""
         )
+        stance, move, unchanged_count, recent_moves = self._plan_turn(
+            book_description, recent_historic, topic_discussion
+        )
         summary_section = (
             f"Points already discussed (do NOT repeat these):\n{discussion_summary}\n\n"
             if discussion_summary else ""
@@ -333,6 +475,10 @@ class ParticipantAgent:
             f"You are part of a book club discussion and will speak about the book and your experience related to book, be natural and not too serious. Speak naturally in one or two sentences. "
             f"The book being discussed: {book_description}\n"
             f"Current topic: {topic_discussion}\n"
+            f"What you are currently thinking: {stance}\n"
+            f"YOUR CONVERSATION MOVE: {move}\n"
+            "Carry out that move: extend an idea, dispute a specific point, ask one question, "
+            "share an example, change angle, build on a point, or react emotionally as selected.\n"
             f"{rag_section}"
             f"{user_context}"
             f"{summary_section}"
@@ -358,6 +504,8 @@ class ParticipantAgent:
         if not text:
             raise ValueError(f"The model returned an empty message for {self.name}")
 
+        self.turn_snapshots.append((self.stance, self.stance_unchanged_count, list(self.recent_moves)))
+        self.stance, self.stance_unchanged_count, self.recent_moves = stance, unchanged_count, recent_moves
         # 히스토리에 추가 (이 캐릭터만의 기억)
         self.history.append(HumanMessage(content=prompt))
         self.history.append(AIMessage(content=text))
@@ -450,6 +598,10 @@ def reset_agents():
     """Start a new discussion without retaining the previous session's memory."""
     for agent in AGENTS.values():
         agent.history.clear()
+        agent.stance = ""
+        agent.stance_unchanged_count = 0
+        agent.recent_moves = []
+        agent.turn_snapshots.clear()
 
 
 def rollback_agents(removed_messages: list):
@@ -464,3 +616,5 @@ def rollback_agents(removed_messages: list):
             # history는 [HumanMessage, AIMessage] 쌍으로 쌓이므로 2개씩 제거
             if len(agent.history) >= 2:
                 agent.history = agent.history[:-2]
+                if agent.turn_snapshots:
+                    agent.stance, agent.stance_unchanged_count, agent.recent_moves = agent.turn_snapshots.pop()
