@@ -11,7 +11,9 @@ import os
 from langchain_openai import ChatOpenAI
 from langgraph.graph import START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from participant import participant_creation, reset_agents
+from participant import participant_creation, reset_agents, AGENTS, PARTICIPANT_DESCRIPTIONS, MODEL_NAME as PARTICIPANT_MODEL, TURN_SIGNAL_STYLE
+from session_log import start_session, record_turn, publish_turn
+from rag import EMBEDDING_MODEL
 from tts import tts_generate
 from tools import append_line_to_file
 from rag import init_rag
@@ -81,6 +83,11 @@ def _initialize_session(state: BookAgentState, include_user=False):
     append_line_to_file("book_club_conversation.txt", message)
     state.update(participants_name=names, book_summary=book_summary,
                  topics_history=[topic], messages=[message])
+    start_session(state, {"chat_model": PARTICIPANT_MODEL, "embedding_model": EMBEDDING_MODEL,
+                          "turn_signal_style": TURN_SIGNAL_STYLE,
+                          "personas": {name: PARTICIPANT_DESCRIPTIONS[name] for name in names if name in AGENTS}})
+    record_turn(state, "President", os.path.join("dialogue_audio", "President_Introduction.wav"),
+                {"book_summary": book_summary})
     return state
 
 
@@ -93,13 +100,16 @@ def assistant(state: BookAgentState):
     last=0 #Number of messages since the last president intervention
     while len(state["messages"])<state.get("max_messages", 100):
         next_speaker = choose_next(state,last)
+        evidence = {}
+        filepath = ""
         
         if next_speaker == "President": #Make the president speak and fine a new topic
             last=0 
-            new_topic,new_message,_ = president(
+            new_topic,new_message,filepath = president(
                 state["messages"],
                 state["book"],
                 state["topics_history"],
+                evidence=evidence,
             )
             state["topics_history"].append(new_topic)
         
@@ -110,7 +120,7 @@ def assistant(state: BookAgentState):
         
         else: #Make a participant speak
             last+=1
-            new_message, _ = make_speak(
+            new_message, filepath = make_speak(
                 state["messages"],
                 state["book"],
                 state["topics_history"],
@@ -119,6 +129,9 @@ def assistant(state: BookAgentState):
             )
 
         state["messages"].append(new_message)
+        if next_speaker in AGENTS and AGENTS[next_speaker].turn_evidence:
+            evidence = AGENTS[next_speaker].turn_evidence[-1]
+        publish_turn(state, next_speaker, filepath, evidence)
 
 
     
@@ -135,6 +148,7 @@ def controlled_assistant(state: BookAgentState, last:int, force_question:Optiona
     
     
     next_speaker = choose_next(state,last)
+    evidence = {}
     
     if next_speaker == "President": #Make the president speak and fine a new topic
         last=0 
@@ -142,6 +156,7 @@ def controlled_assistant(state: BookAgentState, last:int, force_question:Optiona
             state["messages"],
             state["book"],
             state["topics_history"],
+            evidence=evidence,
         )
         state["topics_history"].append(new_topic)
     
@@ -159,7 +174,9 @@ def controlled_assistant(state: BookAgentState, last:int, force_question:Optiona
         )
 
     state["messages"].append(new_message)
-
+    if next_speaker in AGENTS and AGENTS[next_speaker].turn_evidence:
+        evidence = AGENTS[next_speaker].turn_evidence[-1]
+    publish_turn(state, next_speaker, filepath, evidence)
 
     
     

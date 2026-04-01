@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 import os
 import warnings
 from dotenv import load_dotenv
@@ -268,6 +269,7 @@ class ParticipantAgent:
         self.stance_unchanged_count = 0
         self.recent_moves = []
         self.turn_snapshots = []
+        self.turn_evidence = []
         self.history: list = []  # [HumanMessage, AIMessage, ...] 교대로 쌓임
 
     def _plan_turn(self, book_description: str, recent_historic: str,
@@ -504,6 +506,12 @@ class ParticipantAgent:
         if not text:
             raise ValueError(f"The model returned an empty message for {self.name}")
 
+        self.turn_evidence.append({
+            "query": query, "rag_context": passages, "move": move,
+            "stance_before": self.stance, "stance_after": stance,
+            "unchanged_count": unchanged_count, "recent_moves": list(recent_moves),
+            "response_prompt": prompt,
+        })
         self.turn_snapshots.append((self.stance, self.stance_unchanged_count, list(self.recent_moves)))
         self.stance, self.stance_unchanged_count, self.recent_moves = stance, unchanged_count, recent_moves
         # 히스토리에 추가 (이 캐릭터만의 기억)
@@ -602,6 +610,7 @@ def reset_agents():
         agent.stance_unchanged_count = 0
         agent.recent_moves = []
         agent.turn_snapshots.clear()
+        agent.turn_evidence.clear()
 
 
 def rollback_agents(removed_messages: list):
@@ -616,5 +625,7 @@ def rollback_agents(removed_messages: list):
             # history는 [HumanMessage, AIMessage] 쌍으로 쌓이므로 2개씩 제거
             if len(agent.history) >= 2:
                 agent.history = agent.history[:-2]
+                if agent.turn_evidence:
+                    agent.turn_evidence.pop()
                 if agent.turn_snapshots:
                     agent.stance, agent.stance_unchanged_count, agent.recent_moves = agent.turn_snapshots.pop()

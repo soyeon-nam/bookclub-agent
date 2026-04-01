@@ -11,3 +11,4 @@ class BookAgentState(TypedDict, total=False):
     user_name: str
     topics_history: list[str]
     max_messages: int
+    _session: dict

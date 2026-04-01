@@ -7,6 +7,7 @@ from agent_main import controlled_init, controlled_assistant
 from action import choose_action
 from participant import rollback_agents, get_all_participant_names
 from tools import append_line_to_file
+from session_log import publish_turn, restore_session
 
 
 def turns_since(messages, speaker):
@@ -51,8 +52,10 @@ def run_cli(participants=None, book="pinocchio", user="Soyeon"):
                 print("Cannot roll back that many messages; keep the opening message.")
                 continue
             removed = state["messages"][-count:]
+            restored, audio_count = deepcopy(snapshots[-count])
+            restore_session(restored, state)
             rollback_agents(removed)
-            state, audio_count = snapshots[-count]
+            state = restored
             del snapshots[-count:]
             del audio_action[audio_count:]
             with open("book_club_conversation.txt", "w", encoding="utf-8") as transcript:
@@ -79,6 +82,7 @@ def run_cli(participants=None, book="pinocchio", user="Soyeon"):
             message = f"{state['user_name']}: {command}"
             state["messages"].append(message)
             append_line_to_file("book_club_conversation.txt", message)
+            publish_turn(state, state["user_name"])
         snapshots.append(before)
 
 
