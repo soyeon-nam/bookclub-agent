@@ -4,7 +4,9 @@ from typing import Optional
 import urllib.request
 
 from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from rag_search import KeywordIndex, search
+import os
 from rag_index import INDEX_SETTINGS, build_index, load_index, save_index
 import hashlib
 import json
@@ -24,6 +26,8 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 INDEX_DIR = Path(__file__).resolve().parent / "faiss_index"
 _vectorstore: Optional[FAISS] = None
 index_info = {}
+_keywords = None
+_llm = None
 
 
 def _fetch_text(book_name: str) -> Optional[str]:
@@ -52,9 +56,10 @@ def _fetch_text(book_name: str) -> Optional[str]:
 
 def init_rag(book_name: str) -> bool:
     """Reuse an index only when the source, model and chunk settings match."""
-    global _vectorstore, index_info
+    global _vectorstore, index_info, _keywords
     _vectorstore = None
     index_info = {}
+    _keywords = None
     text = _fetch_text(book_name)
     if not text or not text.strip():
         print(f"[RAG] No source for '{book_name}'; continuing without retrieval.")
@@ -76,6 +81,9 @@ def init_rag(book_name: str) -> bool:
             save_index(path, identity, store)
         except OSError as error:
             warnings.warn(f"Index cache could not be saved: {type(error).__name__}")
+    documents = [store.docstore.search(store.index_to_docstore_id[i])
+                 for i in range(store.index.ntotal)]
+    _keywords = KeywordIndex(documents)
     _vectorstore = store
     index_info = dict(identity, cache_key=key, cache_hit=cache_hit,
                       chunk_count=store.index.ntotal)
@@ -83,11 +91,30 @@ def init_rag(book_name: str) -> bool:
     return True
 
 
-def retrieve(query: str, k: int = 3) -> str:
-    """Return related passages, or an empty string when RAG is unavailable."""
-    if k < 1:
-        raise ValueError("k must be positive")
+def _get_llm():
+    global _llm
+    if _llm is None:
+        _llm = ChatOpenAI(model=os.getenv("GPT_MODEL", "gpt-4o-mini"), temperature=0,
+                          timeout=30, max_retries=1)
+    return _llm
+
+
+def retrieve(query: str, k: int = 3, *, trace=None) -> str:
+    """Rewrite, fuse vector/BM25 candidates and rerank original-text passages.
+
+    Optional trace is caller-owned and records this search only. Model failures
+    fall back to the original query/fused order; index/search failures propagate.
+    """
+    if type(k) is not int or k < 1:
+        raise ValueError("k must be a positive integer")
+    details = trace if trace is not None else {}
+    details.clear()
     if _vectorstore is None or not query.strip():
+        details["status"] = "unavailable" if _vectorstore is None else "empty_query"
         return ""
-    documents = _vectorstore.similarity_search(query, k=k)
-    return "\n---\n".join(document.page_content for document in documents)
+    details.update(status="searching", cache_key=index_info.get("cache_key"),
+                   model=os.getenv("GPT_MODEL", "gpt-4o-mini"))
+    result = search(_vectorstore, _keywords, query.strip(), index_info.get("book", ""),
+                    k, _get_llm, details)
+    details["status"] = "passed"
+    return result
