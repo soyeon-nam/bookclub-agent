@@ -13,3 +13,6 @@ __pycache__/
 
 # Local book sources are runtime inputs, not generated application code.
 books/*.txt
+
+# Reusable local book indexes (text and embeddings).
+faiss_index/

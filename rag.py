@@ -1,11 +1,14 @@
-"""Basic book retrieval: source text -> overlapping chunks -> FAISS passages."""
+"""Book retrieval with semantic passages and reusable, content-addressed indexes."""
 from pathlib import Path
 from typing import Optional
 import urllib.request
 
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from rag_index import INDEX_SETTINGS, build_index, load_index, save_index
+import hashlib
+import json
+import warnings
 
 
 BOOKS_DIR = Path(__file__).resolve().parent / "books"
@@ -18,7 +21,9 @@ BOOK_FALLBACK_URLS = {
     "pinocchio": "https://www.mirrorservice.org/sites/ftp.ibiblio.org/pub/docs/books/gutenberg/5/0/500/500-0.txt",
 }
 EMBEDDING_MODEL = "text-embedding-3-small"
+INDEX_DIR = Path(__file__).resolve().parent / "faiss_index"
 _vectorstore: Optional[FAISS] = None
+index_info = {}
 
 
 def _fetch_text(book_name: str) -> Optional[str]:
@@ -46,23 +51,35 @@ def _fetch_text(book_name: str) -> Optional[str]:
 
 
 def init_rag(book_name: str) -> bool:
-    """Build a fresh index; missing/empty sources disable RAG for this session.
-
-    Download, embedding and index errors propagate instead of silently pretending
-    retrieval is working. Clear the old book before attempting initialization.
-    """
-    global _vectorstore
+    """Reuse an index only when the source, model and chunk settings match."""
+    global _vectorstore, index_info
     _vectorstore = None
+    index_info = {}
     text = _fetch_text(book_name)
     if not text or not text.strip():
         print(f"[RAG] No source for '{book_name}'; continuing without retrieval.")
         return False
-    chunks = RecursiveCharacterTextSplitter(
-        chunk_size=500, chunk_overlap=50,
-    ).split_text(text)
+    identity = {
+        "book": book_name.strip().lower(),
+        "source_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "embedding_model": EMBEDDING_MODEL,
+        "settings": dict(INDEX_SETTINGS),
+    }
+    key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+    path = INDEX_DIR / f"{key}.npz"
     embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
-    _vectorstore = FAISS.from_texts(chunks, embeddings)
-    print(f"[RAG] Initialized '{book_name}' with {len(chunks)} chunks.")
+    store = load_index(path, identity, embeddings)
+    cache_hit = store is not None
+    if store is None:
+        store = build_index(text, embeddings, identity["source_sha256"])
+        try:
+            save_index(path, identity, store)
+        except OSError as error:
+            warnings.warn(f"Index cache could not be saved: {type(error).__name__}")
+    _vectorstore = store
+    index_info = dict(identity, cache_key=key, cache_hit=cache_hit,
+                      chunk_count=store.index.ntotal)
+    print(f"[RAG] {'Loaded' if cache_hit else 'Built'} '{book_name}' with {store.index.ntotal} chunks.")
     return True
 
 
