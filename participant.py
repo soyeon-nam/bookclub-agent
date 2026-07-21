@@ -20,6 +20,7 @@ CONVERSATION_MOVES = [
     "SHARE_ANECDOTE",      # share a relevant personal experience or example from your domain
     "REDIRECT",            # shift the angle or bring up a new aspect of the topic
     "BUILD_ON",            # develop someone else's idea further
+    "CONCEDE_AND_REVISE",   # acknowledge a specific reason and revise the prior position
     "REACT_EMOTIONALLY",   # express surprise, excitement, doubt, amusement, etc.
 ]
 
@@ -278,10 +279,10 @@ class ParticipantAgent:
         hint = f"Your prior stance: {self.stance or '(first contribution)'}\n"
         hint += f"Recent moves: {', '.join(self.recent_moves)}\n"
         if self.stance_unchanged_count >= 2:
-            hint += "Your position has repeated. Consider a counterpoint or a new angle.\n"
+            hint += "Your position has repeated. Consider CONCEDE_AND_REVISE with a concrete reason, or defend it with new evidence.\n"
         if len(self.recent_moves) >= 2 and all(
                 move in {"AGREE_AND_EXTEND", "BUILD_ON"} for move in self.recent_moves[-2:]):
-            allowed = ["DISAGREE_SPECIFIC", "ASK_QUESTION"]
+            allowed = ["DISAGREE_SPECIFIC", "ASK_QUESTION", "CONCEDE_AND_REVISE"]
         if last_content.rstrip().endswith("?"):
             allowed = [move for move in allowed if move != "ASK_QUESTION"]
             hint += "Answer the last question rather than asking another.\n"
@@ -377,7 +378,7 @@ class ParticipantAgent:
             f"{summary_section}"
             f"{repetition_warning}\n"
             f"Recent conversation history:\n{recent_historic}\n"
-            f"- DO NOT soften your stance. Have a clear personal take."
+            f"- Have a clear personal take. Revise it when a concrete argument or evidence changes your view."
             f"- You are free to disagree or challenge what was said."
             f"- Avoid academic tone and generic structures. Switch up phrasing."
             f"Now provide your next short reply to the discussion (one or two sentences). "
@@ -385,7 +386,7 @@ class ParticipantAgent:
             f"Quote or paraphrase what they said to show you're actually engaging with them. "
             f"Do not summarize. Do not start a new topic. Have your own opinion. "
             f"Do not repeat the same sentence structure. The response field must contain only spoken words, without your name. "
-            f"Keep it short and natural. Do not speak too complexly. Use simple language. Short sentences, max 20 words."
+            f"Keep it short and natural. Do not speak too complexly. Use simple language. Short sentences, at most 60 spoken words."
         )
         if force:
             prompt += f" You must ask {user} a question related to the current flow of discussion to make him interact more."
@@ -395,11 +396,17 @@ class ParticipantAgent:
             '"stance" (one sentence expressing your current position), '
             '"move" (one allowed move), "evidence_quote" (one short exact excerpt from '
             'the provided passages, or empty when none applies), '
-            '"response" (your short spoken reply). Decide the stance and move together '
-            'with the response. Only response will be spoken.'
+            '"warrant" (one sentence explaining why the excerpt or example supports your claim), '
+            '"revision_reason" (the concrete counterargument or evidence that changed your '
+            'previous position when move is CONCEDE_AND_REVISE; otherwise empty), '
+            '"response" (your short spoken reply, expressing the evidence-to-claim connection '
+            'and acknowledging a changed position when revising). Decide the stance and move together '
+            'with the response. CONCEDE_AND_REVISE means you acknowledge WHICH specific '
+            'counterargument or passage changed your mind; revision_reason MUST be nonempty '
+            'for that move. Only response will be spoken.'
         )
         messages = [self.system_message] + self.history[-self.MAX_HISTORY:] + [HumanMessage(content=prompt)]
-        structured, generation = generate_turn(self.llm, messages, allowed_moves)
+        structured, generation = generate_turn(self.llm, messages, allowed_moves, passages, self.stance)
         text, stance, move = structured["response"], structured["stance"], structured["move"]
         unchanged_count = count_unchanged(self.stance, stance, self.stance_unchanged_count)
         recent_moves = (self.recent_moves + [move])[-3:]
@@ -409,6 +416,8 @@ class ParticipantAgent:
             "stance_before": self.stance, "stance_after": stance,
             "unchanged_count": unchanged_count, "recent_moves": list(recent_moves),
             "response_prompt": prompt, "structured": structured, "generation": generation,
+            "revision": {"revised": move == "CONCEDE_AND_REVISE", "from": self.stance,
+                         "to": stance, "reason": structured["revision_reason"]},
         })
         self.turn_snapshots.append((self.stance, self.stance_unchanged_count, list(self.recent_moves)))
         self.stance, self.stance_unchanged_count, self.recent_moves = stance, unchanged_count, recent_moves
