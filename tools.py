@@ -1,4 +1,6 @@
 import ast
+import re
+from conversation_monitor import analyze, mentioned_participant
 import rag
 import json
 import shutil
@@ -33,90 +35,59 @@ MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
 
 from langchain_core.messages import AIMessage
 
-def choose_next(state,last) -> str:
-    """
-    Choose the next participant to speak in the book club.
-
-    Args:
-        state (BookAgentState): The current state of the book club discussion.
-        last (int): Number of messages since the last president intervention
-        
-
-    Returns:
-        new_message (str): The name of the next participant to speak.
-    """
-    recent_messages = state["messages"][-6:]
-    topic = state.get("topics_history", [])
-    current_topic = topic[-1] if topic else "General impression of the book"
-
-    candidate_names = [
-        name for name in state["participants_name"]
-        if name != state.get("user_name")
-    ]
-    if not candidate_names:
+def choose_next(state, last) -> str:
+    """Route from quality and participant signals; current messages are authoritative."""
+    messages = state["messages"]
+    participants = [name for name in state["participants_name"] if name != state.get("user_name")]
+    if not participants:
         raise ValueError("At least one AI participant is required")
+    last_speaker = messages[-1].split(":", 1)[0].strip() if messages else ""
+    current_topic = (state.get("topics_history") or ["General impression of the book"])[-1]
+    moves = [turn.get("evidence", {}).get("move", "")
+             for turn in state.get("_session", {}).get("utterances", [])
+             if turn.get("kind") == "participant"]
+    quality = analyze(messages, participants, moves, state["book"])
+    decision = {"quality": quality, "signals": []}
+    def select(name, reason):
+        state["_routing"] = dict(decision, selected=name, reason=reason)
+        return name
+
+    if last_speaker == state.get("user_name"):
+        addressed = mentioned_participant(messages[-1].split(":", 1)[-1], participants)
+        if addressed:
+            return select(addressed, "user_addressed_participant")
+    candidates = [name for name in participants if name != last_speaker] or participants
+    if quality["is_repetitive"] and quality["president_allowed"]:
+        return select("President", "repetition_after_cooldown")
 
     signals = []
-    for name in candidate_names:
+    for name in candidates:
         try:
-            signal = participant_turn_signal(
-                name=name,
-                book_description=state["book"],
-                recent_historic=recent_messages,
-                topic_discussion=current_topic,
-                user=state.get("user_name", ""),
-            )
-        except Exception as exc:
-            signal = {
-                "speaker": name,
-                "want_to_speak": False,
-                "score": 0,
-                "reason": f"Signal error: {exc}",
-                "target": "none",
-            }
+            signal = dict(participant_turn_signal(name=name, book_description=state["book"],
+                          recent_historic=messages[-8:], topic_discussion=current_topic,
+                          user=state.get("user_name", "")))
+        except Exception as error:
+            signal = {"want_to_speak": False, "score": 0,
+                      "reason": type(error).__name__, "target": "none"}
+        signal["speaker"] = name
+        prior = next((i for i, message in enumerate(reversed(messages))
+                      if message.split(":", 1)[0].strip() == name), len(messages)+1)
+        bonus = min(3, prior//2)
+        if quality["question_target"] == name:
+            bonus += 3
+        if quality["agreement_dominated"] and re.search(
+                r"\b(disagree|challenge|counter|wrong)\b|push back", signal.get("reason", ""), re.I):
+            bonus += 2
+        signal["base_score"] = signal["score"]
+        signal["score"] = min(10, signal["score"] + bonus)
         signals.append(signal)
-
-    president_allowed = last > 10
-    valid_choices = candidate_names + (["President"] if president_allowed else [])
-    repetition_hint = _detect_repetition(state["messages"])
-    stale_hint = (
-        "The conversation is repeating earlier points. Consider President for a fresh topic.\n"
-        if repetition_hint and president_allowed else ""
-    )
-    prompt = (
-        f"{stale_hint}"
-        f"You are the central discussion router for a book club about '{state['book']}'.\n"
-        f"Current topic: {current_topic}\n"
-        f"Recent conversation history: {recent_messages}\n"
-        f"Participant turn signals: {json.dumps(signals, ensure_ascii=True)}\n"
-        f"President eligible this turn: {president_allowed}\n\n"
-        "Choose exactly one next speaker.\n"
-        "Priority rules:\n"
-        "- Prefer participants with higher scores when their reason clearly connects to the latest message.\n"
-        "- Vary the flow naturally and avoid repetitive back-and-forth patterns.\n"
-        "- Choose President only if president eligible is true and the discussion seems stale, blocked, or needs a new angle.\n"
-        "- Never choose the user.\n"
-        f"Return only one name from this list: {', '.join(valid_choices)}."
-    )
-    llm = ChatOpenAI(model=MODEL_NAME)
-    response = llm.invoke([HumanMessage(content=prompt)])
-
-    text = response.content.strip()
-    cleaned = text.splitlines()[0].strip().strip(".:,;!?'\"") if text else ""
-
-    if cleaned in valid_choices:
-        return cleaned
-
-    ranked_signals = sorted(
-        signals,
-        key=lambda signal: (signal["want_to_speak"], signal["score"]),
-        reverse=True,
-    )
-    if ranked_signals and ranked_signals[0]["want_to_speak"]:
-        return ranked_signals[0]["speaker"]
-
-    return "President" if president_allowed else candidate_names[0]
-
+    decision["signals"] = signals
+    ranked = sorted(signals, key=lambda item: (item["want_to_speak"], item["score"]), reverse=True)
+    if ranked[0]["want_to_speak"]:
+        return select(ranked[0]["speaker"], "ranked_interest_and_quality")
+    if quality["president_allowed"] and not quality["has_unanswered_question"]:
+        return select("President", "no_willing_participant_after_cooldown")
+    return select(ranked[0]["speaker"], "participant_fallback")
 
 
 def _detect_repetition(messages: list[str], window: int = 8) -> str:

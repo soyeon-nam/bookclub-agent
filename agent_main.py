@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import TypedDict, Annotated, Optional, Dict, Any
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
@@ -82,7 +83,7 @@ def _initialize_session(state: BookAgentState, include_user=False):
     tts_generate(opening, "president", os.path.join("dialogue_audio", "President_Introduction.wav"))
     append_line_to_file("book_club_conversation.txt", message)
     state.update(participants_name=names, book_summary=book_summary,
-                 topics_history=[topic], messages=[message])
+                 topics_history=[topic], messages=[message], _routing={})
     start_session(state, {"chat_model": PARTICIPANT_MODEL, "embedding_model": EMBEDDING_MODEL,
                           "turn_signal_style": TURN_SIGNAL_STYLE,
                           "personas": {name: PARTICIPANT_DESCRIPTIONS[name] for name in names if name in AGENTS}})
@@ -131,6 +132,7 @@ def assistant(state: BookAgentState):
         state["messages"].append(new_message)
         if next_speaker in AGENTS and AGENTS[next_speaker].turn_evidence:
             evidence = AGENTS[next_speaker].turn_evidence[-1]
+        evidence = dict(evidence, routing=deepcopy(state.get("_routing", {})))
         publish_turn(state, next_speaker, filepath, evidence)
 
 
@@ -176,6 +178,7 @@ def controlled_assistant(state: BookAgentState, last:int, force_question:Optiona
     state["messages"].append(new_message)
     if next_speaker in AGENTS and AGENTS[next_speaker].turn_evidence:
         evidence = AGENTS[next_speaker].turn_evidence[-1]
+    evidence = dict(evidence, routing=deepcopy(state.get("_routing", {})))
     publish_turn(state, next_speaker, filepath, evidence)
 
     
