@@ -7,7 +7,7 @@ import shutil
 from langchain_core.tools import tool
 from typing import List, Tuple
 from agentstate import BookAgentState
-from participant import participant_get_speak, participant_turn_signal, rollback_agents
+from participant import participant_get_speak, participant_turn_signal, batch_turn_signal, rollback_agents
 from typing import Union, Tuple
 import requests
 import os
@@ -60,15 +60,27 @@ def choose_next(state, last) -> str:
     if quality["is_repetitive"] and quality["president_allowed"]:
         return select("President", "repetition_after_cooldown")
 
+    try:
+        collected = batch_turn_signal(candidates, book_description=state["book"],
+                                      recent_historic=messages[-8:], topic_discussion=current_topic,
+                                      user=state.get("user_name", ""))
+        decision["signal_collection"] = {"mode":"batch", "calls":1}
+    except Exception as error:
+        decision["signal_collection"] = {"mode":"individual_fallback", "calls":1+len(candidates),
+                                          "batch_error":type(error).__name__}
+        collected = []
+        for name in candidates:
+            try:
+                signal = participant_turn_signal(name=name, book_description=state["book"],
+                           recent_historic=messages[-8:], topic_discussion=current_topic,
+                           user=state.get("user_name", ""))
+            except Exception as signal_error:
+                signal = {"want_to_speak":False, "score":0,
+                          "reason":type(signal_error).__name__, "target":"none"}
+            collected.append(signal)
     signals = []
-    for name in candidates:
-        try:
-            signal = dict(participant_turn_signal(name=name, book_description=state["book"],
-                          recent_historic=messages[-8:], topic_discussion=current_topic,
-                          user=state.get("user_name", "")))
-        except Exception as error:
-            signal = {"want_to_speak": False, "score": 0,
-                      "reason": type(error).__name__, "target": "none"}
+    for name, raw_signal in zip(candidates, collected):
+        signal = dict(raw_signal)
         signal["speaker"] = name
         prior = next((i for i, message in enumerate(reversed(messages))
                       if message.split(":", 1)[0].strip() == name), len(messages)+1)
