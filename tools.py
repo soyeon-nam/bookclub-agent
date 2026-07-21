@@ -60,11 +60,17 @@ def choose_next(state, last) -> str:
     if quality["is_repetitive"] and quality["president_allowed"]:
         return select("President", "repetition_after_cooldown")
 
+    # The participant query is already known after AI/moderator turns. Start it
+    # before scoring candidates. User questions need their own analysis first.
+    if state.get('_session', {}).get('session_id') and last_speaker != state.get('user_name'):
+        content = messages[-1].split(':',1)[-1].strip() if messages else ''
+        decision['prefetch'] = rag.prefetch_retrieve(f'{current_topic} {content}'.strip(), k=3)
+    collection = {}
     try:
         collected = batch_turn_signal(candidates, book_description=state["book"],
                                       recent_historic=messages[-8:], topic_discussion=current_topic,
-                                      user=state.get("user_name", ""))
-        decision["signal_collection"] = {"mode":"batch", "calls":1}
+                                      user=state.get("user_name", ""), trace=collection)
+        decision["signal_collection"] = dict(collection, mode="batch")
     except Exception as error:
         decision["signal_collection"] = {"mode":"individual_fallback", "calls":1+len(candidates),
                                           "batch_error":type(error).__name__}

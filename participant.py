@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_openai import ChatOpenAI
 import rag
 from speaker_signals import batch_signals
+from runtime_cache import MEMO
 from turn_output import generate_turn, unchanged_count as count_unchanged
 
 load_dotenv()
@@ -494,13 +495,13 @@ def participant_turn_signal(name: str, book_description: str = "", recent_histor
     return AGENTS[name].turn_signal(book_description, recent_historic, topic_discussion, user)
 
 
-def batch_turn_signal(names, book_description='', recent_historic='', topic_discussion='', user=''):
+def batch_turn_signal(names, book_description='', recent_historic='', topic_discussion='', user='', trace=None):
     if any(name not in AGENTS or name == user for name in names):
         raise ValueError('Batch candidates must be selected AI participants')
     profiles = [{'speaker':name, 'persona':PARTICIPANT_DESCRIPTIONS[name],
                  'stance':AGENTS[name].stance, 'recent_moves':list(AGENTS[name].recent_moves)} for name in names]
     return batch_signals(profiles, book_description, recent_historic, topic_discussion,
-                         TURN_SIGNAL_STYLE, MODEL_NAME)
+                         TURN_SIGNAL_STYLE, MODEL_NAME, trace=trace)
 
 
 def get_all_participant_names() -> list[str]:
@@ -521,6 +522,7 @@ def participant_creation(selected=None) -> dict:
 
 def reset_agents():
     """Start a new discussion without retaining the previous session's memory."""
+    MEMO.clear()
     for agent in AGENTS.values():
         agent.history.clear()
         agent.stance = ""
@@ -535,6 +537,8 @@ def rollback_agents(removed_messages: list):
     롤백으로 제거된 메시지들을 받아, 해당 화자의 agent history도 함께 롤백.
     removed_messages: 제거된 메시지 리스트 (최신 순서로 처리)
     """
+    if removed_messages:
+        MEMO.clear()
     for message in reversed(removed_messages):
         speaker = message.split(":")[0].strip()
         if speaker in AGENTS:

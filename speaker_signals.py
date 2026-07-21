@@ -4,6 +4,7 @@ import json
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from rag_search import parse_json
+from runtime_cache import MEMO, cache_key
 
 STANDARDS = {
     'conservative':'High scores only for a clear invitation or uniquely relevant contribution.',
@@ -17,7 +18,7 @@ def _get_llm(model):
     return ChatOpenAI(model=model, temperature=0, timeout=30, max_retries=1)
 
 
-def batch_signals(profiles, book, recent, topic, style, model):
+def _calculate_signals(profiles, book, recent, topic, style, model):
     names = [profile['speaker'] for profile in profiles]
     if not names or len(set(names)) != len(names):
         raise ValueError('Candidates must be nonempty and unique')
@@ -50,3 +51,12 @@ def batch_signals(profiles, book, recent, topic, style, model):
     if set(by_name) != set(names):
         raise ValueError('Missing candidate')
     return [by_name[name] for name in names]
+
+
+def batch_signals(profiles, book, recent, topic, style, model, trace=None):
+    key = cache_key('speaker-signals-v1', {'profiles':profiles, 'book':book, 'recent':recent,
+                                         'topic':topic, 'style':style, 'model':model})
+    result, status = MEMO.get(key, lambda:_calculate_signals(profiles, book, recent, topic, style, model))
+    if trace is not None:
+        trace.update(cache_status=status, calls=1 if status=='miss' else 0)
+    return result

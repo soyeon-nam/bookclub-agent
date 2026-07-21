@@ -11,6 +11,7 @@ from rag_index import INDEX_SETTINGS, build_index, load_index, save_index
 import hashlib
 import json
 import warnings
+from runtime_cache import MEMO, cache_key
 
 
 BOOKS_DIR = Path(__file__).resolve().parent / "books"
@@ -28,6 +29,7 @@ _vectorstore: Optional[FAISS] = None
 index_info = {}
 _keywords = None
 _llm = None
+_llm_model = None
 
 
 def _fetch_text(book_name: str) -> Optional[str]:
@@ -57,6 +59,7 @@ def _fetch_text(book_name: str) -> Optional[str]:
 def init_rag(book_name: str) -> bool:
     """Reuse an index only when the source, model and chunk settings match."""
     global _vectorstore, index_info, _keywords
+    MEMO.clear()
     _vectorstore = None
     index_info = {}
     _keywords = None
@@ -72,7 +75,7 @@ def init_rag(book_name: str) -> bool:
     }
     key = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
     path = INDEX_DIR / f"{key}.npz"
-    embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
+    embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL, request_timeout=30, max_retries=1)
     store = load_index(path, identity, embeddings)
     cache_hit = store is not None
     if store is None:
@@ -91,30 +94,54 @@ def init_rag(book_name: str) -> bool:
     return True
 
 
-def _get_llm():
-    global _llm
-    if _llm is None:
-        _llm = ChatOpenAI(model=os.getenv("GPT_MODEL", "gpt-4o-mini"), temperature=0,
+def _get_llm(model=None):
+    global _llm, _llm_model
+    model = model or os.getenv("GPT_MODEL", "gpt-4o-mini")
+    if _llm is None or _llm_model != model:
+        _llm_model = model
+        _llm = ChatOpenAI(model=model, temperature=0,
                           timeout=30, max_retries=1)
     return _llm
 
 
-def retrieve(query: str, k: int = 3, *, trace=None) -> str:
-    """Rewrite, fuse vector/BM25 candidates and rerank original-text passages.
-
-    Optional trace is caller-owned and records this search only. Model failures
-    fall back to the original query/fused order; index/search failures propagate.
-    """
+def _search_request(query, k):
     if type(k) is not int or k < 1:
         raise ValueError("k must be a positive integer")
+    if _vectorstore is None or not query.strip():
+        return None
+    # Capture the actual book objects; a pending search cannot switch to a new book.
+    store, keywords, identity = _vectorstore, _keywords, dict(index_info)
+    model = os.getenv("GPT_MODEL", "gpt-4o-mini")
+    key = cache_key('retrieval-v1', {'index':identity.get('cache_key'), 'model':model,
+                                    'query':query.strip(), 'k':k})
+    def compute():
+        trace = {'status':'searching', 'cache_key':identity.get('cache_key'), 'model':model}
+        text = search(store, keywords, query.strip(), identity.get('book',''), k, lambda:_get_llm(model), trace)
+        trace['status'] = 'passed'
+        return {'text':text, 'trace':trace}
+    return key, compute
+
+
+def _cacheable(result):
+    trace = result['trace']
+    return trace.get('rewrite_status') != 'fallback' and trace.get('rerank_status') != 'fallback'
+
+
+def retrieve(query: str, k: int = 3, *, trace=None) -> str:
+    """Reuse a completed or in-flight search, with a private trace for this turn."""
     details = trace if trace is not None else {}
     details.clear()
-    if _vectorstore is None or not query.strip():
-        details["status"] = "unavailable" if _vectorstore is None else "empty_query"
-        return ""
-    details.update(status="searching", cache_key=index_info.get("cache_key"),
-                   model=os.getenv("GPT_MODEL", "gpt-4o-mini"))
-    result = search(_vectorstore, _keywords, query.strip(), index_info.get("book", ""),
-                    k, _get_llm, details)
-    details["status"] = "passed"
-    return result
+    request = _search_request(query, k)
+    if request is None:
+        details['status'] = 'unavailable' if _vectorstore is None else 'empty_query'
+        return ''
+    result, status = MEMO.get(*request, cache_if=_cacheable)
+    details.update(result['trace'], cache_status=status)
+    return result['text']
+
+
+def prefetch_retrieve(query: str, k: int = 3):
+    request = _search_request(query, k)
+    if request is None:
+        return 'unavailable'
+    return MEMO.prefetch(*request, cache_if=_cacheable)
