@@ -1,50 +1,52 @@
-from dotenv import load_dotenv
-load_dotenv()
+"""Normalize model animation labels without changing the existing Unity IDs."""
 import os
+from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage
+from ops_log import ops_event
 
-llm = ChatOpenAI(model="gpt-4o")
+load_dotenv()
+MODEL_NAME = os.getenv('ACTION_MODEL', 'gpt-4o')
+llm = ChatOpenAI(model=MODEL_NAME, temperature=0, request_timeout=30, max_retries=1)
 
-action_list = ["Normal 1","Normal 2", "Questionning", "Thinking", "Angry", "Happy", "Sad" ]
-action_map = {name: i + 1 for i, name in enumerate(action_list)}
-
-def choose_action(speach: str) -> str:
-    
-    message = [
-        HumanMessage(
-            content=[
-                {
-                    "type": "text",
-                    "text": (
-                        "You are an assistant that help to choose the best action for someone character during his speach to do based on his speach. "
-                        "You have the choice between the following actions: " + ", ".join(action_list) + ". "
-                        "Based on the following speach: " + speach + " "
-                        "Choose the most appropriate action that fit the most with the speach. Choose normal 1 or 2 actions for normal speach, and more emotional actions for very emotional speach. "
-                        "Only return the name of the action without any additional explanation."
-         ) }])]
-            
-
-    # Call the llm model
-    response = llm.invoke(message)
-    action =response.content.strip()
+# Questionning is a historical Unity label. Preserve its ID and public spelling.
+action_list = ['Normal 1', 'Normal 2', 'Questionning', 'Thinking', 'Angry', 'Happy', 'Sad']
+action_map = {name: index + 1 for index, name in enumerate(action_list)}
+_LABELS = {name.casefold(): name for name in action_list}
+_LABELS['questioning'] = 'Questionning'
+_FALLBACK = 'Normal 1'
 
 
-    return action
+def _normalize(action):
+    if not isinstance(action, str):
+        return None
+    key = ' '.join(action.strip().strip('\"\'“”‘’').split()).casefold()
+    return _LABELS.get(key)
+
+
+def choose_action(speach: str, *, session_id=None, turn_id=None) -> str:
+    context = {'session_id': session_id, 'turn_id': turn_id, 'model': MODEL_NAME,
+               'source': 'choose_action'}
+    try:
+        response = llm.invoke([HumanMessage(content=(
+            'Choose the animation for this speech. Allowed labels: ' + ', '.join(action_list) + '. '
+            'Use Normal 1 or Normal 2 for ordinary speech and emotional actions only for strongly emotional speech. '
+            'Return only one label. Speech: ' + speach))])
+        raw = response.content
+    except Exception as error:
+        ops_event('action_failed', **context, error_type=type(error).__name__,
+                  label=_FALLBACK, animation_id=action_map[_FALLBACK])
+        return _FALLBACK
+    label = _normalize(raw)
+    ops_event('action_chosen' if label else 'action_unmapped', **context,
+              raw=raw, label=label or _FALLBACK, animation_id=action_map[label or _FALLBACK])
+    return label or _FALLBACK
+
 
 def action_to_id(action: str) -> int:
-    return action_map.get(action, 0)
-
-# print(choose_action("Hello everyone , welcome to this book club."))
-# print(choose_action("Yes, i think that this book is really interesting and i loved the characters development."))
-# print(choose_action("Oui clairement , mais bon je trouve que valjean pourrais etre plus developpé sur le point de la mélancolie"))
-# print(choose_action("I don't like this book at all, it's boring and the plot is weak."))
-# print(choose_action("The themes explored in this book are profound and thought-provoking."))
-# print(choose_action("I am so happy to have read this book, it brought me joy and inspiration."))
-# print(choose_action("This book made me sad, it touched on some really emotional topics."))
-# print(choose_action("I am angry about the way the story ended, it felt unfair to the characters."))
-# print(choose_action("I need to think more about the implications of the book's message."))
-# print(choose_action("Can someone explain the symbolism used in the book?"))
-# print(choose_action("What do you think about the character's motivations?"))
-# print(choose_action("How does the setting influence the story?"))
-# print(choose_action("What are your thoughts on the author's writing style?"))
+    label = _normalize(action)
+    if label is None:
+        ops_event('action_mapping_fallback', source='action_to_id', raw=action,
+                  label=_FALLBACK, animation_id=action_map[_FALLBACK])
+    # Mapping choose_action's canonical result does not double-count a decision.
+    return action_map[label or _FALLBACK]

@@ -20,6 +20,7 @@ from langchain_core.messages import HumanMessage
 from agentstate import BookAgentState
 from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
+from ops_log import ops_event
 from tts import tts_generate
 import datetime
 
@@ -50,6 +51,9 @@ def choose_next(state, last) -> str:
     decision = {"quality": quality, "signals": []}
     def select(name, reason):
         state["_routing"] = dict(decision, selected=name, reason=reason)
+        ops_event('turn_decision', session_id=state.get('_session', {}).get('session_id'),
+                  turn_idx=len(messages), selected=name, reason=reason,
+                  signal_collection=decision.get('signal_collection', {}))
         return name
 
     if last_speaker == state.get("user_name"):
@@ -72,6 +76,8 @@ def choose_next(state, last) -> str:
                                       user=state.get("user_name", ""), trace=collection)
         decision["signal_collection"] = dict(collection, mode="batch")
     except Exception as error:
+        ops_event('speaker_batch_fallback', session_id=state.get('_session', {}).get('session_id'),
+                  turn_idx=len(messages), error_type=type(error).__name__, candidates=candidates)
         decision["signal_collection"] = {"mode":"individual_fallback", "calls":1+len(candidates),
                                           "batch_error":type(error).__name__}
         collected = []
@@ -81,6 +87,8 @@ def choose_next(state, last) -> str:
                            recent_historic=messages[-8:], topic_discussion=current_topic,
                            user=state.get("user_name", ""))
             except Exception as signal_error:
+                ops_event('speaker_signal_failed', session_id=state.get('_session', {}).get('session_id'),
+                          turn_idx=len(messages), speaker=name, error_type=type(signal_error).__name__)
                 signal = {"want_to_speak":False, "score":0,
                           "reason":type(signal_error).__name__, "target":"none"}
             collected.append(signal)

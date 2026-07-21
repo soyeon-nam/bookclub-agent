@@ -69,11 +69,10 @@ def run_cli(participants=None, book="pinocchio", user="Soyeon"):
             force = turns_since(state["messages"], state["user_name"]) > 10
             state, speaker, filepath = controlled_assistant(state, last, force)
             print(state["messages"][-1])
-            try:
-                action = choose_action(state["messages"][-1])
-            except Exception as error:
-                print(f"Animation classification failed ({type(error).__name__}); using Normal 1.")
-                action = "Normal 1"
+            session = state.get('_session', {})
+            latest = (session.get('utterances') or [{}])[-1]
+            action = choose_action(state["messages"][-1],
+                                   session_id=session.get('session_id'), turn_id=latest.get('turn_id'))
             audio_action.append([speaker, filepath, action])
             print(f"{speaker} spoke. Audio file at: {filepath}, action: {action}")
             if force:

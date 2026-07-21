@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import shutil
 from uuid import uuid4
+from ops_log import ops_event
 
 
 def _save(session):
@@ -56,6 +57,8 @@ def record_turn(state, speaker, audio='', evidence=None):
             target.unlink(missing_ok=True)
         raise
     state['_session'] = session
+    ops_event('utterance_committed', session_id=session['session_id'],
+              turn_id=turn_id, turn_idx=record['turn_idx'], speaker=speaker)
 
 
 def restore_session(restored, current):
@@ -69,13 +72,17 @@ def restore_session(restored, current):
     session['events'].append({'type': 'rollback', 'removed_turn_ids': [turn['turn_id'] for turn in removed]})
     _save(session)
     restored['_session'] = session
+    ops_event('rollback', session_id=session['session_id'],
+              removed_turn_ids=[turn['turn_id'] for turn in removed])
 
 
 def publish_turn(state, speaker, audio='', evidence=None):
     """If durable logging fails, undo the just-generated turn and plain transcript."""
     try:
         record_turn(state, speaker, audio, evidence)
-    except Exception:
+    except Exception as error:
+        ops_event('utterance_save_failed', session_id=state.get('_session', {}).get('session_id'),
+                  speaker=speaker, error_type=type(error).__name__)
         from participant import rollback_agents
         message = state['messages'].pop()
         if speaker.lower() == 'president':

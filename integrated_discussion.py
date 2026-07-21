@@ -108,7 +108,7 @@ class DiscussionController:
             self.tts_manager.send_tts_audio(
                 audio_file_path=intro_audio_path,
                 speaker=255,  # President
-                animation_type=0,
+                animation_type=action_to_id("Normal 1"),
                 user_sequence=self.user_seq,
                 flag=0
             )
@@ -139,7 +139,10 @@ class DiscussionController:
             self.last_user += 1
 
         self.state, speaker, audio_path = controlled_assistant(self.state, self.last, force)
-        action = choose_action(self.state["messages"][-1] if self.state["messages"] else "")
+        session = self.state.get('_session', {})
+        latest = (session.get('utterances') or [{}])[-1]
+        action = choose_action(self.state["messages"][-1] if self.state["messages"] else "",
+                               session_id=session.get('session_id'), turn_id=latest.get('turn_id'))
         self.audio_action.append([speaker, audio_path, action])
         print(f"{speaker} spoke. Audio file at: {audio_path}, action chosen: {action}")
         if force:
