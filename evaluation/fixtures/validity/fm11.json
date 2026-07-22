@@ -1,0 +1,118 @@
+{
+  "id": "fm11",
+  "metric": "frame_diversity",
+  "book": "pinocchio",
+  "participants": [
+    "Yoon_Jae",
+    "Seo_Yeon",
+    "Dr_Noh",
+    "Han_Jun"
+  ],
+  "minimum_gap": 0.5,
+  "variants": {
+    "bad": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "What does the book say a child needs?",
+        "text": "Discipline, plainly. The book punishes every escape and rewards every submission. A child needs boundaries, rules, the firm hand. Collodi is unambiguous about it."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "What does the book say a child needs?",
+        "text": "I read the opposite, Yoon Jae. The book's energy is all in the escapes — the theater, the road, the sea. A child needs freedom to wander and err. The rules exist to be outgrown."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "What does the book say a child needs?",
+        "text": "I side with structure. Left free, Pinocchio ends up a donkey every time. Guidance, order, supervision — without them the child self-destructs. The evidence points to discipline."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "What does the book say a child needs?",
+        "text": "Yet the obedient moments are the book's deadest pages, Dr Noh. Liberty is where Pinocchio is most alive. The wandering is the point; a child needs room to roam, not walls."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "What does the book say a child needs?",
+        "text": "Aliveness is not the measure, Han Jun — survival is. Every taste of liberty nearly kills him: hanged, jailed, transformed. Order protects. The strict path is the loving path, chapter after chapter."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "What does the book say a child needs?",
+        "text": "But protection that cages is no gift, Yoon Jae. The freest choice he makes — diving into the sea — is also his finest. Independence is the book's true north; constraint merely delays it."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "What does the book say a child needs?",
+        "text": "The dive succeeds because discipline preceded it, Seo Yeon. Untrained freedom flails. First the rules, then the autonomy — structure is the precondition, not the enemy. I hold my ground here."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "What does the book say a child needs?",
+        "text": "And I hold mine: rules learned without freedom produce compliance, not character. The child must roam to become someone worth disciplining. Liberty first, order after. We are clearly at an impasse."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "What does the book say a child needs?",
+        "text": "An impasse with two clear camps: Dr Noh and I for structure, you two for freedom. Restraint versus release, the oldest quarrel in child-rearing, restaged tonight. The book gives ammunition to both, evidently."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "What does the book say a child needs?",
+        "text": "Evidently. Freedom against discipline, wildness against walls — we have circled the same two poles all evening in fresh vocabulary. Perhaps the book simply asks each reader to pick a side, and we have picked ours."
+      }
+    ],
+    "good": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "What does the book say a child needs?",
+        "text": "Discipline, plainly. The book punishes every escape and rewards every submission. A child needs boundaries, rules, the firm hand. Collodi is unambiguous about it."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "What does the book say a child needs?",
+        "text": "Freedom, I would have said — but let me complicate both our answers, Yoon Jae. Before rules or liberty, Pinocchio needs food. He begins begging, eats pear cores, sells his primer from hunger. The freedom-discipline quarrel is a luxury the book's poverty keeps interrupting. What does a child need? Bread, first, on the evidence."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "What does the book say a child needs?",
+        "text": "Seo Yeon's bread reframes the villains too. The Fox and the Coachman are not tempters of the free — they are predators on the hungry, offering wealth and food to a child with neither. A child needs protection from an adult economy designed to consume him. That is neither discipline nor freedom; it is a third demand the book makes."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "What does the book say a child needs?",
+        "text": "And a fourth, quieter one: someone whose absence hurts. Watch what actually redirects Pinocchio — never the rules, rarely liberty, but Geppetto coatless in the snow, the Fairy's gravestone. A child needs a bond expensive enough to feel. The discipline works only when it is administered by someone he cannot bear to lose."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "What does the book say a child needs?",
+        "text": "Then my opening answer was one wall of a four-walled room. Take the school scenes again with your three layers in place: Pinocchio thrives at school until hunger, predation, and a friend's invitation strip the bond away — the discipline collapses because its preconditions do. Order is real but load-bearing only when bread, safety, and attachment stand under it."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "What does the book say a child needs?",
+        "text": "The donkey chapters confirm the ordering. The Land of Toys supplies liberty in bulk and the circus supplies discipline in bulk, and both destroy him — because both are institutions without a person who loves him inside them. Freedom and discipline are each fatal when administered anonymously. The variable is never the regime; it is who runs it and why."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "What does the book say a child needs?",
+        "text": "Which lets us answer the original question with the book's own economy: a child needs to matter to someone at a price that someone visibly pays. Geppetto pays a coat, the Fairy pays her patience, and finally Pinocchio pays bucket-turns. The freedom-versus-discipline debate dissolves — both are just currencies, worthless until someone underwrites them."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "What does the book say a child needs?",
+        "text": "And the ending audits every layer we named: a house with food in it, work that pays, no predators at the door, a father restored to health — and only inside all four does the moral transformation finalize. Collodi answers the nature-of-the-child question with a checklist of conditions. The book is less a sermon than a building code for childhood."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "What does the book say a child needs?",
+        "text": "A building code — I accept the demotion of my sermon. What began as restraint versus release ends as four load-bearing walls: bread, safety, bond, and yes, discipline as the roof that needs the walls first. The question held still all evening; the answer grew rooms. That is what the binary could never do."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "What does the book say a child needs?",
+        "text": "And notice the book planted every room we found — the pear cores, the four dollars for a donkey, the coat in the snow, the schoolbell. We did not import the layers; we finally read them. A child needs what Pinocchio lacked in chapter one and holds in the last: the full inventory, not the winning side of a quarrel."
+      }
+    ]
+  }
+}

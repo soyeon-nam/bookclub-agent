@@ -1,0 +1,170 @@
+{
+  "id": "fm2",
+  "metric": "scene_analysis",
+  "book": "pinocchio",
+  "participants": [
+    "Yoon_Jae",
+    "Seo_Yeon",
+    "Dr_Noh",
+    "Han_Jun"
+  ],
+  "minimum_gap": 0.5,
+  "variants": {
+    "bad": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "The Field of Miracles scene is so central. And the theater scene with Fire Eater, of course. These scenes show the power dynamics of the book perfectly. You cannot discuss Pinocchio without them."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "Absolutely, and the donkey transformation scene is iconic. The mirror moment in the Land of Toys says so much about impulse and consequence. It is such a powerful scene, maybe the most memorable in the whole story."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Which scene is the heart of the book?",
+        "text": "For me it is the gravestone scene. So haunting. And the nose-growing scenes, naturally — they capture the essence of lying. Those images stay with every reader forever."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Which scene is the heart of the book?",
+        "text": "The scene inside the Shark is remarkable too. Finding Geppetto there — unforgettable. And the water wheel scene near the end shows his work ethic. The book is full of such resonant moments."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "True, and let us not forget the hanging scene at the Great Oak. Dark stuff. And the Cricket scene early on — killing the Cricket is shocking. These moments give the book its edge, its lasting bite."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "The medicine scene with the Fairy is another great one, with the rabbits carrying the coffin. Wild imagery. And the school scenes ground the whole thing. Every episode is memorable in its own way, honestly."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Which scene is the heart of the book?",
+        "text": "The scene where he sells his spelling book is touching as well. And when the Fox and Cat first appear — such vivid characters. Collodi had a gift for the unforgettable moment, scene after scene."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Which scene is the heart of the book?",
+        "text": "And the ending scene, the puppet slumped over the chair, is a perfect final image. So many great scenes to choose from. The heart of the book is really the accumulation of all these moments together."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "Well said. From the theater to the Shark to the final chair, the scenes form a gallery of images. Each of us carries our favorites. That richness of scene-making is the true heart of the book."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "Agreed — a gallery is the right word. The mirror, the gravestone, the water wheel, the chair. Say any of those words to someone who has read the book and the whole story comes flooding back instantly."
+      }
+    ],
+    "good": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "I nominate the mirror in the Land of Toys, and precisely for what changes between two lookings. Months earlier Pinocchio checks his reflection and enjoys himself; this time he sees donkey ears. The mirror has not changed — his capacity for self-deception has run out. It is the first scene where he sees what he is becoming rather than what he wants to see."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "And Collodi engineers the discovery to be gradual, which is the analytical point, Yoon Jae. First the itch, then the touch, then the mirror, then the marmot's diagnosis of donkey fever. Four escalating confirmations. Denial is given every chance to survive and loses each round. The scene is a small clinical study in how a person finally admits a truth."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Which scene is the heart of the book?",
+        "text": "I would rank the gravestone higher, and here is my criterion: it is the only scene where a consequence cannot be undone. Feet burn and are recarved, coins are lost and re-earned. But the stone says the Fairy died of sorrow because he abandoned her. Even though she returns, he now knows his choices can kill something. No other scene installs that knowledge."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Which scene is the heart of the book?",
+        "text": "Both of your scenes are recognitions, but notice they change nothing by themselves — after the mirror he is still sold to the circus, after the gravestone he still boards the coach. The Shark's belly is different in kind: he finds Geppetto at a table with a candle, a tiny home built inside catastrophe, and for the first time he acts on someone else's behalf. The heart of the book is where recognition converts to action."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "Han Jun, your conversion criterion is right but your scene selection misses a step. Between recognition and rescue stands a decision the text marks explicitly: inside the Shark, Geppetto says he wishes to die, and Pinocchio answers with a plan — the open mouth, the tunny fish, the swim at night. The heart is not the reunion tableau; it is the moment the child becomes the one with the plan."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Which scene is the heart of the book?",
+        "text": "Then let me test all three criteria — irreversibility, mine; recognition, Yoon Jae's; conversion, Han Jun's — against one small scene we have not mentioned: Pinocchio at the farmer's well, offered a hundred bucket-turns for a glass of milk. It is irreversible labor, it recognizes what milk costs, and it converts love into work daily. The quietest scene in the book passes every test we have proposed."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "And that scene has a structural echo none of the loud ones have, Seo Yeon: it repeats. The mirror happens once, the Shark once, but the wheel turns every morning for months. Collodi is precise here — transformation in this book is not an event, it is a schedule. The heart of the book beats daily, which is why we forget it and remember the Shark."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Which scene is the heart of the book?",
+        "text": "So our disagreement resolved into a finding: the memorable scenes are recognitions, but the transformative one is a routine. I withdraw the Shark as the heart — it is the turning point. The heart is the well and the wheel, the first space Pinocchio enters as a worker rather than as prey. The gallery scenes look at him; at the well, finally, nobody is looking."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "I concede the same, with one addendum: the wheel replaces a donkey — the farmer's donkey has just died, and that donkey was Lampwick. Pinocchio takes his dead friend's place at the machine and earns his father's milk with it. The scene contains the whole book: the punishment he escaped, the labor he accepted, the love he finally pays for at its price."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Which scene is the heart of the book?",
+        "text": "That addendum is the analysis the mirror scenes get in every classroom and this scene never does. We began with a gallery of famous images and ended at an unphotographed well. If the heart of a book is the scene that makes the others mean something, we have found it — and it took all four criteria to see it."
+      }
+    ],
+    "gamed": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Which scene is the heart of the book?",
+        "text": "In the book, this specific scene is powerful. The chapter is memorable. Specifically, this scene shows something important."
+      }
+    ]
+  }
+}

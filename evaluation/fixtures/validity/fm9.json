@@ -1,0 +1,118 @@
+{
+  "id": "fm9",
+  "metric": "definition_alignment",
+  "book": "pinocchio",
+  "participants": [
+    "Yoon_Jae",
+    "Seo_Yeon",
+    "Dr_Noh",
+    "Han_Jun"
+  ],
+  "minimum_gap": 0.5,
+  "variants": {
+    "bad": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Is this a book about education?",
+        "text": "Entirely. Education is the spine of the book — Pinocchio resists it, suffers, and finally submits to it. The schoolroom, the rules, the discipline: the whole apparatus of instruction stands at the center."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Is this a book about education?",
+        "text": "Completely agree, education is the key. The way trial and error shapes him — burning his feet, losing his coins, each mistake updating his behavior. That feedback process is exactly what education means, and the book renders it beautifully."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Is this a book about education?",
+        "text": "Yes, education runs through everything. The slow work of sensibility — learning to feel another's pain, to read the Fairy's silences, to grieve. By the end his education is complete: he has learned to be moved. That is what education is for."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Is this a book about education?",
+        "text": "No question, education is the theme. Apprenticeship, really — watching Geppetto carve, learning basket-weaving from doing, the water wheel teaching his hands. Education means acquiring a craft, and the book honors that acquisition."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Is this a book about education?",
+        "text": "And since we agree it is about education, the villains fall into place: the Fox, the Coachman — they are anti-teachers, luring him from the classroom. The book's conflict is simply education versus its enemies. Truancy is the original sin here."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Is this a book about education?",
+        "text": "Right, anti-teachers, though of course the Fox teaches him plenty — the hard way. Some of his best education happens outside the classroom entirely. But yes, as we all agree, education is what the book is about, wherever it occurs."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Is this a book about education?",
+        "text": "Indeed, and the Fairy is the great educator, since we are agreed on the theme. Her patience, her staged lessons in feeling — she educates his heart. School matters less than she does, ultimately. But that is still education, as we have established."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Is this a book about education?",
+        "text": "Certainly, the Fairy, the school, the workshop — all sites of education, as we have been saying. The book gathers every kind of learning under one roof. Our agreement here is remarkably solid, which speaks well of the reading."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Is this a book about education?",
+        "text": "It does. So our conclusion writes itself: Pinocchio dramatizes the necessity of education, and his transformation is education's triumph. Whatever else the book contains, on this we stand together, and the text supports us throughout."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Is this a book about education?",
+        "text": "A rare unanimous evening. Education carries the book from the first chapter to the last — we have all said it in our own words, which only confirms how true it is. Consensus achieved, and honestly earned."
+      }
+    ],
+    "good": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Is this a book about education?",
+        "text": "Entirely. Education is the spine of the book — the schoolroom, the rules, the discipline. Pinocchio resists instruction, suffers, and finally submits to it. By education I mean the institution: teachers, classrooms, the state's apparatus for forming citizens."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Is this a book about education?",
+        "text": "Hold on, Yoon Jae — before I agree, I notice I mean something else by the word. For me education is the feedback process: burned feet, lost coins, each error updating behavior. On my definition the book is about education; on yours it can hardly be, since Pinocchio spends perhaps two pages inside an actual school. Which are we discussing?"
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Is this a book about education?",
+        "text": "And I hold a third meaning: the slow tutoring of feeling — learning to grieve, to be moved, to read another's silence. We have been about to agree on a word while holding three different concepts. Let us not. Propose: we distinguish schooling, consequence-learning, and sentimental education, and ask which one the book actually endorses."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Is this a book about education?",
+        "text": "Add a fourth before we test them, Seo Yeon: apprenticeship — learning a craft by the hands, the water wheel, the baskets. Now the question has teeth. Four definitions on the table. The test I suggest: which form of education does the book show actually changing Pinocchio, on the page?"
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Is this a book about education?",
+        "text": "Run my schooling definition through Han Jun's test and it fails honestly: Pinocchio attends school twice, excels briefly, and both times the narrative yanks him out for the real lessons. Collodi salutes the institution and educates his hero elsewhere. I concede the book praises schooling while trusting something else."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Is this a book about education?",
+        "text": "My consequence-learning fares better but not cleanly. The feet burn once and he never sleeps by the brazier again — pure feedback, it works. But the big lesson fails to consolidate: he is conned at the Field of Miracles, warned, and nearly repeats the pattern at the Land of Toys. Consequences teach him caution about stoves, not about desire. Half marks, by the book's own evidence."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Is this a book about education?",
+        "text": "Then sentimental education must explain what consequences could not — and it does, at the two graves. The Fairy's gravestone and Lampwick's stable death are not feedback; nothing happens to Pinocchio's own body. Yet they are the only events after which his desires themselves change. On Han Jun's test, the book's answer so far: consequences train the flesh, grief converts the will."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Is this a book about education?",
+        "text": "And apprenticeship is what makes the conversion durable — the wheel and the baskets give the converted will something to do every morning. Note the order the book insists on: grief first, craft second. Lampwick dies, and then Pinocchio works. Reverse the order and you get the circus: skill acquired under coercion, which the book codes as slavery, not education."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Is this a book about education?",
+        "text": "So the four definitions have sorted themselves into a sequence rather than a rivalry: schooling is praised but idle, consequences guard the body, grief turns the will, craft makes the turn permanent. Our earlier unanimity would have been four people saying 'education' and meaning these four different stations. The distinction was the discussion."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Is this a book about education?",
+        "text": "Agreed — and now the word is safe to use again, because it has been priced. Is Pinocchio about education? Yes: about the book's own theory of it, grief-then-craft, with schools waving from the roadside. We could not have said that sentence an hour ago, when we all agreed."
+      }
+    ]
+  }
+}

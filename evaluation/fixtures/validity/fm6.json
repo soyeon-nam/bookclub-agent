@@ -1,0 +1,118 @@
+{
+  "id": "fm6",
+  "metric": "digestion",
+  "book": "pinocchio",
+  "participants": [
+    "Yoon_Jae",
+    "Seo_Yeon",
+    "Dr_Noh",
+    "Han_Jun"
+  ],
+  "minimum_gap": 0.5,
+  "variants": {
+    "bad": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Pinocchio's relapses are a class story. He is poor, and every con in the book — the Fox, the Coachman — targets the poor with promises of effortless wealth. Gramsci would say the Field of Miracles is hegemony in miniature: the exploited digging their own holes."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Fascinating point, Yoon Jae. What I find remarkable is how dopamine drives habit loops. The brain tags unexpected rewards and demands repetition. Variable reinforcement is the most addictive schedule there is, which is why casinos use it. Pinocchio's brain is simply doing what brains do."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "That is such an interesting angle, Dr Noh. For me, the book is about narrative hunger. Pinocchio wants to be the hero of a more exciting story than the one school offers. Every con artist simply hands him a better plot. Writers know this hunger intimately."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "I love that, Seo Yeon. From my side, it is about thresholds. Doors, roads, coastlines — Pinocchio is always crossing out of bounded spaces into open ones. Architecture teaches that unbounded space produces unbounded behavior. The Land of Toys has no walls at all, notice."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "A great observation, Han Jun. Returning to power for a moment: Machiavelli writes that men are so simple that a deceiver will always find someone willing to be deceived. The book is a catalogue of that principle. Each episode restages the same asymmetry between the cunning and the credulous."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "So true, Yoon Jae. And here is another wrinkle — adolescent brains discount future consequences steeply. Ask a teenager to weigh five months of play against donkey ears and the play wins every time. Temporal discounting explains nearly all of it, honestly."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Wonderful, Dr Noh. It reminds me how repetition works in fairy tales generally. Rule of three, the same test failed twice and passed the third time. Collodi is working in an oral tradition where repetition is the grammar of memory itself. The relapses are formally required."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Beautifully put, Seo Yeon. Consider also the vernacular landscape of the book — Tuscan villages, farmhouses, piazzas. These towns were built for surveillance by neighbors, everyone visible to everyone. Pinocchio misbehaves precisely when he leaves the village's sightlines. Space polices morality."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Very evocative, Han Jun. One more historical note: Collodi wrote during Italian unification, when the state was desperately building schools. The book is state propaganda for literacy, and Pinocchio's relapses dramatize the peasant resistance the state actually faced. His mistakes are political documents."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Fascinating context, Yoon Jae. And to round out my thread: habit change requires replacing cues, not willpower. Pinocchio only reforms when his environment changes completely — new town, new job, sick father. Swap the cues and the loop finally breaks. Neuroscience and fairy tales agree, it seems."
+      }
+    ],
+    "good": [
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Pinocchio's relapses are a class story. He is poor, and every con in the book — the Fox, the Coachman — targets the poor with promises of effortless wealth. The Field of Miracles is exploitation in miniature: the victim digs the hole himself."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Yoon Jae, your phrase 'digs the hole himself' is doing real work — let me give it a mechanism. The con succeeds because the reward is imagined vividly and the cost is abstract. Twenty minutes to a money tree is concrete; losing everything is not. Your class story runs on that cognitive asymmetry."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "I want to push on the premise you two now share — that Pinocchio is a victim of cons. He is warned every single time. The Cricket warns him, the Blackbird warns him and is eaten for it, the Parrot laughs at him over the buried coins. A con needs concealment; these are announced in advance. So what is it called when you walk into a trap that was labeled?"
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Seo Yeon's question has an answer in the book's geography. Every warning happens at a threshold — the Cricket at the house, the Blackbird at the roadside. The warnings are stationed at exits. Pinocchio ignores them because heeding a warning at a threshold means turning back, and he cannot yet afford to see turning back as anything but defeat."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Han Jun, connect your thresholds to my economics and the picture completes: turning back is defeat because home contains debts — the burned feet, the sold spelling book, the coat Geppetto lost for him. Each relapse flees a ledger he cannot settle. Seo Yeon, that answers your labeled trap: he walks in because behind him is a bill."
+      },
+      {
+        "speaker": "Dr_Noh",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "The ledger reading is elegant, Yoon Jae, but it overpredicts. If relapses flee debt, the biggest debt should trigger the biggest relapse — yet after his worst failure, losing the coins, he goes straight to the Fairy and works. And his last relapse, the Land of Toys, happens when things are going well, the night before his boy-transformation party. Shame does not explain that timing. Lampwick's invitation does."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Dr Noh has found the real pattern, I think. Look at who invites him each time: puppets who call him brother, a friend leaving that very night. Yoon Jae's ledger explains why leaving is easy, but the trigger is always belonging offered without conditions. School and the Fairy offer belonging with conditions. He relapses toward the unconditional version every time."
+      },
+      {
+        "speaker": "Han_Jun",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Then our four claims assemble into one sentence. The cons target his class, as Yoon Jae showed; the imagined reward beats the abstract cost, as Dr Noh showed; the trap is labeled but behind him is a bill; and the bait, per Seo Yeon, is unconditional belonging. He stops relapsing at the farm — where belonging is earned daily, priced in bucket-turns, and paid in milk. The book's answer is belonging with a visible price."
+      },
+      {
+        "speaker": "Yoon_Jae",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "I accept that synthesis with one amendment: it vindicates the class reading rather than replacing it. Unconditional belonging is exactly what the poor are sold because it is the one thing they cannot buy. Han Jun's visible price is what makes the farm honest — and what made every earlier offer a con."
+      },
+      {
+        "speaker": "Seo_Yeon",
+        "topic": "Why does Pinocchio keep making the same mistakes?",
+        "text": "Amendment accepted. And notice we have answered my labeled-trap question together: the labels fail because a warning speaks to prudence, and his hunger was never prudential — it was for a family that does not keep accounts. The book's cruelty is teaching him that even love keeps accounts; its mercy is showing the accounts can be settled."
+      }
+    ]
+  }
+}

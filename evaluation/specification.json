@@ -700,9 +700,9 @@
       "direction": "diagnostic"
     },
     {
-      "id": "planned.semantic_scene_analysis",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "semantic.scene_analysis",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R1.2",
         "R2.1",
@@ -712,14 +712,14 @@
         "FM-1",
         "FM-2"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "0–2 척도와 발언 ID·정확 인용을 사용하는 독립 의미 판정. 합성 대비·반복 채점만으로 실제 대화의 타당도나 인간 평가 일치를 보증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
-      "id": "planned.reference_contribution",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "semantic.reference_contribution",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R3.2",
         "R3.3"
@@ -727,28 +727,28 @@
       "failure_modes": [
         "FM-3"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "0–2 척도와 발언 ID·정확 인용을 사용하는 독립 의미 판정. 합성 대비·반복 채점만으로 실제 대화의 타당도나 인간 평가 일치를 보증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
-      "id": "planned.semantic_rebuttal",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "semantic.genuine_rebuttal",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R4.3"
       ],
       "failure_modes": [
         "FM-5"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "0–2 척도와 발언 ID·정확 인용을 사용하는 독립 의미 판정. 합성 대비·반복 채점만으로 실제 대화의 타당도나 인간 평가 일치를 보증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
-      "id": "planned.digestion",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "semantic.digestion",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R4.1",
         "R6.2"
@@ -756,36 +756,36 @@
       "failure_modes": [
         "FM-6"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "0–2 척도와 발언 ID·정확 인용을 사용하는 독립 의미 판정. 합성 대비·반복 채점만으로 실제 대화의 타당도나 인간 평가 일치를 보증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
-      "id": "planned.definition_alignment",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "semantic.definition_alignment",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R8.2"
       ],
       "failure_modes": [
         "FM-9"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "0–2 척도와 발언 ID·정확 인용을 사용하는 독립 의미 판정. 합성 대비·반복 채점만으로 실제 대화의 타당도나 인간 평가 일치를 보증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
-      "id": "planned.frame_diversity",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "semantic.frame_diversity",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R1.1"
       ],
       "failure_modes": [
         "FM-11"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "0–2 척도와 발언 ID·정확 인용을 사용하는 독립 의미 판정. 합성 대비·반복 채점만으로 실제 대화의 타당도나 인간 평가 일치를 보증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
