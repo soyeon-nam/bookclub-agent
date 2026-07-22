@@ -65,7 +65,8 @@ def generate_turn(llm, messages, allowed_moves, passages='', prior_stance=''):
             request = messages + [AIMessage(content=attempts[-1]["content"]), HumanMessage(content=(
                 'The previous result was invalid: '+errors[-1]+'. Return the complete JSON object. '
                 'For evidence_quote, copy a contiguous excerpt exactly from the supplied passages; '
-                'never paraphrase. Use an empty quote if no excerpt supports the claim. '
+                'never paraphrase. Use an empty quote if no excerpt supports the claim. ' +
+                ('No book passages are available: evidence_quote MUST be an empty string. ' if not passages.strip() else '') +
                 'Allowed moves: '+', '.join(allowed_moves)))]
         content = llm.invoke(request).content
         try:

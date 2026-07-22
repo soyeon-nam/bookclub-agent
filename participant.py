@@ -360,7 +360,8 @@ class ParticipantAgent:
             f"{passages}\n\n"
             "Use a relevant detail when it helps your reply. Do not invent quotations "
             "or claim these excerpts contain facts they do not support.\n"
-            if passages else ""
+            if passages else "No book passages are available. evidence_quote MUST be an empty string. "
+            "Conversation messages are not book evidence. Explain your example in warrant.\n"
         )
         allowed_moves, turn_hint = self._turn_constraints(last_content, force)
         summary_section = (
