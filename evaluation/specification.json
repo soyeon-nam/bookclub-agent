@@ -789,23 +789,23 @@
       "direction": "diagnostic"
     },
     {
-      "id": "planned.persona_realization",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "persona.persona_realization",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R5.1"
       ],
       "failure_modes": [
         "P-1"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "별도의 자기 지시서 실현 판정과 이름 마스킹·후보 순서 무작위화 화자 식별. 표본 수·오류 분모·혼동행렬을 보고하며 인간 평가 또는 통계적 우위를 입증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
-      "id": "planned.blind_speaker_attribution",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "persona.blind_speaker_attribution",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R5.2",
         "R5.3"
@@ -813,8 +813,8 @@
       "failure_modes": [
         "P-2"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "별도의 자기 지시서 실현 판정과 이름 마스킹·후보 순서 무작위화 화자 식별. 표본 수·오류 분모·혼동행렬을 보고하며 인간 평가 또는 통계적 우위를 입증하지 않는다.",
+      "availability": "optional_paid",
       "direction": "diagnostic"
     },
     {
