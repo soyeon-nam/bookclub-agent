@@ -84,10 +84,13 @@ def automatic_metrics(session):
 
 
 def build_report(session, source_bytes=None):
+    from .coverage import automatic_contracts
+    automatic = automatic_metrics(session)
     canonical = json.dumps(session,sort_keys=True,ensure_ascii=False).encode()
     return {'schema_version':1,'session_id':session.get('session_id'),
             'source_sha256':hashlib.sha256(source_bytes if source_bytes is not None else canonical).hexdigest(),
-            'automatic':automatic_metrics(session),
+            'automatic':automatic,
+            'measurement_contract':automatic_contracts(automatic),
             'limitations':[
                 'Active AI participant turns only; moderator, user and discarded turns are excluded from lexical and turn-distribution metrics.',
                 'Move labels are generation plans, not independent annotations of realized speech acts.',

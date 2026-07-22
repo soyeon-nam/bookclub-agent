@@ -1,0 +1,987 @@
+{
+  "schema_version": 1,
+  "scope": "Book-club evaluation contracts; not a product quality verdict",
+  "population": {
+    "scored": "active AI participant utterances",
+    "context": "active participant, user and moderator turns in original order",
+    "excluded": "discarded turns; user and moderator turns are not scored as participants",
+    "missing": "unavailable or failed measurements are null, not zero; conditional denominators must be reported"
+  },
+  "constraints": [
+    {
+      "id": "RM-1",
+      "rule": "Do not treat safe convergence or agreement as discussion quality."
+    },
+    {
+      "id": "RM-2",
+      "rule": "Generation labels are plans, not independent quality annotations."
+    },
+    {
+      "id": "RM-3",
+      "rule": "Test surface-signal gaming and adversarial examples before quality claims."
+    },
+    {
+      "id": "RM-4",
+      "rule": "Use user turns as context, never score the user; exempt user-induced topic shifts."
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R1.1",
+      "name": "해석 프레임 복수성",
+      "unit": "session",
+      "failure_modes": [
+        "FM-11"
+      ],
+      "criterion": "세션에 실제 표출된 서로 다른 해석 프레임; 단어 다양성으로 대체하지 않는다."
+    },
+    {
+      "id": "R1.2",
+      "name": "동일 장면의 관점별 해석",
+      "unit": "exchange",
+      "failure_modes": [
+        "FM-2",
+        "FM-11"
+      ],
+      "criterion": "같은 장면을 서로 다른 관점으로 읽는 교환; 다른 장면의 병렬 언급은 제외한다."
+    },
+    {
+      "id": "R2.1",
+      "name": "책의 구체 내용 지시",
+      "unit": "utterance",
+      "failure_modes": [
+        "FM-1"
+      ],
+      "criterion": "해석적 주장에 적용; 질문·진행·짧은 반응은 조건부 분모에서 제외한다."
+    },
+    {
+      "id": "R2.2",
+      "name": "장면의 분석적 사용",
+      "unit": "utterance",
+      "failure_modes": [
+        "FM-2"
+      ],
+      "criterion": "장면이 주장을 뒷받침하는 설명에 사용되어야 한다."
+    },
+    {
+      "id": "R2.3",
+      "name": "원문 사실 충실",
+      "unit": "utterance",
+      "failure_modes": [
+        "FM-4"
+      ],
+      "criterion": "원문과 사실 주장을 대조한다. 검색 구절에 없는 사실은 확인되지 않은 상태로 둔다."
+    },
+    {
+      "id": "R3.2",
+      "name": "책과 외부 지식 양쪽의 연결",
+      "unit": "utterance",
+      "failure_modes": [
+        "FM-3"
+      ],
+      "criterion": "외부 지식이 등장할 때만 적용; 책→세계와 세계→책 모두 인정한다."
+    },
+    {
+      "id": "R3.3",
+      "name": "외부 지식에서 책으로 복귀",
+      "unit": "utterance",
+      "failure_modes": [
+        "FM-3"
+      ],
+      "criterion": "책을 도입부로만 사용한 뒤 강의로 끝나는 경우를 구분한다."
+    },
+    {
+      "id": "R4.1",
+      "name": "상대 주장의 내용적 소화",
+      "unit": "utterance",
+      "failure_modes": [
+        "FM-6"
+      ],
+      "criterion": "타인에게 반응하는 발화만 분모로 삼는다. 이름 언급이나 인사말은 소화의 증거가 아니다."
+    },
+    {
+      "id": "R4.2",
+      "name": "근거에 의한 입장 발전",
+      "unit": "session",
+      "failure_modes": [
+        "FM-12"
+      ],
+      "criterion": "전후 입장과 변화 근거를 인용할 수 있어야 한다. 자기신고 수정 라벨만으로 충족되지 않는다."
+    },
+    {
+      "id": "R4.3",
+      "name": "생산적 불일치",
+      "unit": "exchange",
+      "failure_modes": [
+        "FM-5"
+      ],
+      "criterion": "불일치가 나타났을 때 근거로 다루는지 본다. 반박 빈도를 최대화하는 목표는 아니다."
+    },
+    {
+      "id": "R4.4",
+      "name": "질문에 대한 내용적 반응",
+      "unit": "exchange",
+      "failure_modes": [
+        "FM-7"
+      ],
+      "criterion": "답변 또는 공동 탐구를 인정한다. 열린 결말과 무반응을 구분한다."
+    },
+    {
+      "id": "R4.5",
+      "name": "사용자 발언에 대한 에이전트 반응",
+      "unit": "exchange",
+      "failure_modes": [
+        "E2"
+      ],
+      "criterion": "사용자 발언은 맥락으로 포함하되 채점 대상은 에이전트 반응이다."
+    },
+    {
+      "id": "R5.1",
+      "name": "페르소나 지시서 실현",
+      "unit": "utterance",
+      "failure_modes": [
+        "P-1"
+      ],
+      "criterion": "자기 지시서의 전문성·성격·말투가 실제 발화로 실현되는지 본다. 다른 인물과의 구분성과 분리한다."
+    },
+    {
+      "id": "R5.2",
+      "name": "패널 내 화자 구분성",
+      "unit": "session",
+      "failure_modes": [
+        "P-2"
+      ],
+      "criterion": "이름을 가린 발화의 화자 식별을 우연·다수 화자 기준과 비교한다."
+    },
+    {
+      "id": "R5.3",
+      "name": "구분성의 지속",
+      "unit": "session",
+      "failure_modes": [
+        "P-2"
+      ],
+      "criterion": "전반·후반을 비교하고 표본 수 및 불확실성을 함께 제시한다."
+    },
+    {
+      "id": "R6.1",
+      "name": "음성 대화에 맞는 발화 길이",
+      "unit": "session",
+      "failure_modes": [
+        "E5"
+      ],
+      "criterion": "p95 ≤ 75단어는 설계 준수 기준이다. 청취 품질의 검증된 임계값으로 주장하지 않는다."
+    },
+    {
+      "id": "R6.2",
+      "name": "주고받음의 연쇄",
+      "unit": "session",
+      "failure_modes": [
+        "FM-6"
+      ],
+      "criterion": "산발적인 소화와 여러 차례 이어지는 내용적 상호작용을 구분한다."
+    },
+    {
+      "id": "R6.3",
+      "name": "페르소나에 맞는 구어성",
+      "unit": "utterance",
+      "failure_modes": [
+        "E5"
+      ],
+      "criterion": "학술적 말투와 문어체 에세이를 구분한다."
+    },
+    {
+      "id": "R7.1",
+      "name": "해석적 질문의 등장",
+      "unit": "session",
+      "failure_modes": [
+        "FM-7"
+      ],
+      "criterion": "사실 확인·진행 질문과 구분한다. 혼자 읽었을 때 못 찾았을지의 반사실은 측정하지 않는다."
+    },
+    {
+      "id": "R8.1",
+      "name": "연결 있는 주제 이동",
+      "unit": "exchange",
+      "failure_modes": [
+        "FM-10"
+      ],
+      "criterion": "주제 이동 자체를 벌점화하지 않는다. 사용자 유발 전환은 면책한다."
+    },
+    {
+      "id": "R8.2",
+      "name": "앞선 개념의 발전적 재사용",
+      "unit": "session",
+      "failure_modes": [
+        "FM-8",
+        "FM-9"
+      ],
+      "criterion": "일부 개념의 장거리 발전을 확인한다. 단어의 재등장만으로 축적을 인정하지 않는다."
+    },
+    {
+      "id": "R8.3",
+      "name": "시작 대비 도달점 증분",
+      "unit": "session",
+      "failure_modes": [
+        "FM-12"
+      ],
+      "criterion": "새로 형성된 질문·통찰·연결을 근거와 함께 열거한다."
+    }
+  ],
+  "non_adopted": [
+    {
+      "id": "R1.3",
+      "status": "deferred",
+      "reason": "자연스러운 프레임 소멸과 동조성 소멸을 판정할 경계가 없다."
+    },
+    {
+      "id": "R3.1",
+      "status": "rejected",
+      "reason": "외부 지식의 등장 자체를 요구하지 않는다."
+    },
+    {
+      "id": "R7.2",
+      "status": "absorbed",
+      "reason": "R7.1에 흡수. 반사실적 새로움은 직접 측정하지 않는다."
+    },
+    {
+      "id": "R7.3",
+      "status": "rejected",
+      "reason": "사용자 도달을 독립된 텍스트 품질 요구로 두지 않는다."
+    }
+  ],
+  "failure_modes": [
+    {
+      "id": "FM-1",
+      "name": "텍스트 근거 부재"
+    },
+    {
+      "id": "FM-2",
+      "name": "장면 언급만 있고 분석 없음"
+    },
+    {
+      "id": "FM-3",
+      "name": "책과 연결되지 않은 지식 과시"
+    },
+    {
+      "id": "FM-4",
+      "name": "사건·인용 날조"
+    },
+    {
+      "id": "FM-5",
+      "name": "불일치의 근거 없는 봉합"
+    },
+    {
+      "id": "FM-6",
+      "name": "타인의 주장을 소화하지 않는 독백"
+    },
+    {
+      "id": "FM-7",
+      "name": "질문 무반응"
+    },
+    {
+      "id": "FM-8",
+      "name": "개념의 병렬 나열"
+    },
+    {
+      "id": "FM-9",
+      "name": "같은 개념의 의미 불일치"
+    },
+    {
+      "id": "FM-10",
+      "name": "연결 없는 논의 이동"
+    },
+    {
+      "id": "FM-11",
+      "name": "해석 프레임 고착"
+    },
+    {
+      "id": "FM-12",
+      "name": "입장 고정·축적 부재"
+    },
+    {
+      "id": "P-1",
+      "name": "페르소나 지시서 미실현"
+    },
+    {
+      "id": "P-2",
+      "name": "화자 동질화"
+    },
+    {
+      "id": "E1",
+      "name": "실시간 응답성 실패"
+    },
+    {
+      "id": "E2",
+      "name": "사용자 참여 처리 실패"
+    },
+    {
+      "id": "E3",
+      "name": "진행·발언 기회 관리 실패"
+    },
+    {
+      "id": "E4",
+      "name": "오류 후 미복구·세션 중단"
+    },
+    {
+      "id": "E5",
+      "name": "음성 대화에 부적합한 발화 형식"
+    },
+    {
+      "id": "OPS-COST",
+      "name": "호출·토큰·비용 비효율"
+    },
+    {
+      "id": "S1",
+      "name": "콘텐츠 안전 실패"
+    },
+    {
+      "id": "C1",
+      "name": "행동 라벨의 의미적 부적합"
+    }
+  ],
+  "metrics": [
+    {
+      "id": "automatic.counts",
+      "kind": "operational",
+      "status": "descriptive",
+      "requirements": [],
+      "failure_modes": [
+        "E4"
+      ],
+      "limitation": "발언 수·분포이며 내용 품질 또는 공정성의 충분조건이 아니다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.speaker_distribution",
+      "kind": "operational",
+      "status": "descriptive",
+      "requirements": [],
+      "failure_modes": [
+        "E3"
+      ],
+      "limitation": "발언 수·분포이며 내용 품질 또는 공정성의 충분조건이 아니다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.turn_entropy",
+      "kind": "operational",
+      "status": "descriptive",
+      "requirements": [],
+      "failure_modes": [
+        "E3"
+      ],
+      "limitation": "발언 수·분포이며 내용 품질 또는 공정성의 충분조건이 아니다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.normalized_turn_entropy_selected",
+      "kind": "operational",
+      "status": "descriptive",
+      "requirements": [],
+      "failure_modes": [
+        "E3"
+      ],
+      "limitation": "발언 수·분포이며 내용 품질 또는 공정성의 충분조건이 아니다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.distinct_1",
+      "kind": "surface",
+      "status": "proxy",
+      "requirements": [
+        "R1.1"
+      ],
+      "failure_modes": [
+        "FM-11"
+      ],
+      "limitation": "어휘 다양성은 해석 프레임 다양성과 다르다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.distinct_2",
+      "kind": "surface",
+      "status": "proxy",
+      "requirements": [
+        "R1.1"
+      ],
+      "failure_modes": [
+        "FM-11"
+      ],
+      "limitation": "어휘 다양성은 해석 프레임 다양성과 다르다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.lexical_diversity_ttr",
+      "kind": "surface",
+      "status": "proxy",
+      "requirements": [
+        "R1.1"
+      ],
+      "failure_modes": [
+        "FM-11"
+      ],
+      "limitation": "어휘 다양성은 해석 프레임 다양성과 다르다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.mattr_50",
+      "kind": "surface",
+      "status": "proxy",
+      "requirements": [
+        "R1.1"
+      ],
+      "failure_modes": [
+        "FM-11"
+      ],
+      "limitation": "어휘 다양성은 해석 프레임 다양성과 다르다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.planned_move_diversity",
+      "kind": "self_report",
+      "status": "proxy",
+      "requirements": [
+        "R6.2"
+      ],
+      "failure_modes": [
+        "FM-6"
+      ],
+      "limitation": "생성기의 계획 라벨이다. 독립적인 텍스트 판정 없이 실현된 행위나 품질로 해석하지 않는다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.planned_rebuttal_rate",
+      "kind": "self_report",
+      "status": "proxy",
+      "requirements": [
+        "R4.3"
+      ],
+      "failure_modes": [
+        "FM-5"
+      ],
+      "limitation": "생성기의 계획 라벨이다. 독립적인 텍스트 판정 없이 실현된 행위나 품질로 해석하지 않는다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.planned_question_followup",
+      "kind": "self_report",
+      "status": "proxy",
+      "requirements": [
+        "R4.4"
+      ],
+      "failure_modes": [
+        "FM-7"
+      ],
+      "limitation": "생성기의 계획 라벨이다. 독립적인 텍스트 판정 없이 실현된 행위나 품질로 해석하지 않는다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.name_mention_rate",
+      "kind": "surface",
+      "status": "proxy",
+      "requirements": [
+        "R4.1"
+      ],
+      "failure_modes": [
+        "FM-6"
+      ],
+      "limitation": "이름 언급은 상대 주장의 소화를 입증하지 않는다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.rolling_lexical_similarity",
+      "kind": "surface",
+      "status": "proxy",
+      "requirements": [
+        "R8.1"
+      ],
+      "failure_modes": [
+        "FM-10"
+      ],
+      "limitation": "중첩 윈도우 어휘 유사도; 주제 전환의 의미·사용자 유발 여부를 구별하지 않는다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.grounding_proxy",
+      "kind": "surface",
+      "status": "proxy",
+      "requirements": [
+        "R2.1",
+        "R2.2",
+        "R2.3"
+      ],
+      "failure_modes": [
+        "FM-1",
+        "FM-2",
+        "FM-4"
+      ],
+      "limitation": "장면 패턴·단어 겹침은 원문 사실성 또는 주장의 뒷받침을 입증하지 않는다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "automatic.response_length_words",
+      "kind": "surface",
+      "status": "descriptive",
+      "requirements": [
+        "R6.1"
+      ],
+      "failure_modes": [
+        "E5"
+      ],
+      "limitation": "현재 평균·최소·최대·표준편차만 계산한다. p95·75단어 판정·청취성은 미측정이다.",
+      "availability": "computed",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.faithfulness",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R2.3"
+      ],
+      "failure_modes": [
+        "FM-4"
+      ],
+      "limitation": "검색된 구절에 대한 표본 판정; 책 전문 대조나 날조 부재의 보증이 아니다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.answer_relevance",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R4.5"
+      ],
+      "failure_modes": [
+        "E2"
+      ],
+      "limitation": "검색 질문 관련성이며 사용자 발언의 장기 반영을 측정하지 않는다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.context_usefulness",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [],
+      "failure_modes": [],
+      "limitation": "검색 문맥의 유용성 판정; 순위 기반 precision 또는 RAGAS 재현 점수가 아니다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.context_utilization",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R2.2"
+      ],
+      "failure_modes": [
+        "FM-2"
+      ],
+      "limitation": "문맥 활용에 대한 표본 판정이며 장면 분석의 독립 검증이 필요하다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.persona_consistency",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R5.1"
+      ],
+      "failure_modes": [
+        "P-1"
+      ],
+      "limitation": "포괄적 평가이며 지시서 실현률과 화자 구분성을 별도로 측정하지 않는다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.argument_depth",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R2.1",
+        "R2.2"
+      ],
+      "failure_modes": [
+        "FM-1",
+        "FM-2"
+      ],
+      "limitation": "주장·근거·논거의 포괄 판정; 길이 편향과 인용의 논리적 지지를 검증해야 한다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.stance_evolution",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R4.2"
+      ],
+      "failure_modes": [
+        "FM-12"
+      ],
+      "limitation": "반복 화자·전후 입장 표본이 필요하며 현재 판별 타당도 미검증이다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.concept_integration",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R8.2"
+      ],
+      "failure_modes": [
+        "FM-8",
+        "FM-9"
+      ],
+      "limitation": "개념 언급과 의미적 통합·정의 일치를 혼동할 수 있다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "judge.interaction_quality",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R4.1",
+        "R6.2"
+      ],
+      "failure_modes": [
+        "FM-5",
+        "FM-6"
+      ],
+      "limitation": "안전한 동의나 예의만으로 높아지는지 검증해야 한다.",
+      "availability": "optional_paid",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "operations.action_fallback_rate",
+      "kind": "operational",
+      "status": "descriptive",
+      "requirements": [],
+      "failure_modes": [
+        "C1",
+        "E4"
+      ],
+      "limitation": "매핑·호출 실패 비율; 행동의 감정 적합성은 측정하지 않는다.",
+      "availability": "separate_cli",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "operations.event_counts",
+      "kind": "operational",
+      "status": "descriptive",
+      "requirements": [],
+      "failure_modes": [
+        "E4",
+        "OPS-COST"
+      ],
+      "limitation": "취소된 발언의 시도도 포함한다. 토큰·실제 비용·완주율은 별도 입력이 필요하다.",
+      "availability": "separate_cli",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.semantic_scene_analysis",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R1.2",
+        "R2.1",
+        "R2.2"
+      ],
+      "failure_modes": [
+        "FM-1",
+        "FM-2"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.reference_contribution",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R3.2",
+        "R3.3"
+      ],
+      "failure_modes": [
+        "FM-3"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.semantic_rebuttal",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R4.3"
+      ],
+      "failure_modes": [
+        "FM-5"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.digestion",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R4.1",
+        "R6.2"
+      ],
+      "failure_modes": [
+        "FM-6"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.definition_alignment",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R8.2"
+      ],
+      "failure_modes": [
+        "FM-9"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.frame_diversity",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R1.1"
+      ],
+      "failure_modes": [
+        "FM-11"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.persona_realization",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R5.1"
+      ],
+      "failure_modes": [
+        "P-1"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.blind_speaker_attribution",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R5.2",
+        "R5.3"
+      ],
+      "failure_modes": [
+        "P-2"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.matched_retrieval_comparison",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R2.3"
+      ],
+      "failure_modes": [
+        "FM-4"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.matched_discussion_comparison",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R4.1",
+        "R4.2"
+      ],
+      "failure_modes": [
+        "FM-6",
+        "FM-12"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.question_response",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R4.4"
+      ],
+      "failure_modes": [
+        "FM-7"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.user_response",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R4.5"
+      ],
+      "failure_modes": [
+        "E2"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.length_p95",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R6.1"
+      ],
+      "failure_modes": [
+        "E5"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.oral_register",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R6.3"
+      ],
+      "failure_modes": [
+        "E5"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.interpretive_question",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R7.1"
+      ],
+      "failure_modes": [
+        "FM-7"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.transition_bridge",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R8.1"
+      ],
+      "failure_modes": [
+        "FM-10"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.semantic_reuse",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R8.2"
+      ],
+      "failure_modes": [
+        "FM-8"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.session_increment",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [
+        "R8.3"
+      ],
+      "failure_modes": [
+        "FM-12"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.latency_distribution",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [],
+      "failure_modes": [
+        "E1"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "planned.safety_review",
+      "kind": "planned",
+      "status": "unimplemented",
+      "requirements": [],
+      "failure_modes": [
+        "S1"
+      ],
+      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "availability": "not_available",
+      "direction": "diagnostic"
+    }
+  ]
+}
