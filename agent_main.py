@@ -1,47 +1,22 @@
+"""Shared LangGraph nodes for automatic and single-turn discussion execution."""
 from copy import deepcopy
-from typing import TypedDict, Annotated, Optional, Dict, Any
-from langchain_core.messages import AnyMessage
-from langgraph.graph.message import add_messages
-from tools import make_speak, president, choose_next, user_call
+from typing import Optional
+import os
+from dotenv import load_dotenv
+load_dotenv()
+from langchain_core.messages import HumanMessage
+from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, START, END
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import SystemMessage
-from langchain_core.messages import AnyMessage, HumanMessage
-from langgraph.graph.message import add_messages
-import os 
-from langchain_openai import ChatOpenAI
-from langgraph.graph import START, StateGraph
-from langgraph.prebuilt import ToolNode, tools_condition
+from agentstate import BookAgentState
+from tools import make_speak, president, choose_next, user_call, append_line_to_file
 from participant import participant_creation, reset_agents, AGENTS, PARTICIPANT_DESCRIPTIONS, MODEL_NAME as PARTICIPANT_MODEL, TURN_SIGNAL_STYLE
 from session_log import start_session, record_turn, publish_turn
-from rag import EMBEDDING_MODEL
+from rag import EMBEDDING_MODEL, init_rag
 from tts import tts_generate
-from tools import append_line_to_file
-from rag import init_rag
-    # ---------- LLM Setup ----------
 
-from dotenv import load_dotenv
-import os
-
-# load environment variables from .env file
-load_dotenv()
-
-# Use a lightweight GPT model by default, can be overridden with env var GPT_MODEL
 MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
-
 llm = ChatOpenAI(model=MODEL_NAME)
-
-    # ---------- State Management ----------
-
-from agentstate import BookAgentState
-
-    # ---------- List of Tools ----------
-
-# Tools list using @tool decorators
-tools = [make_speak, president]
-llm_with_tools = llm.bind_tools(tools, parallel_tool_calls=False)
-
-    # ---------- Nodes ----------
+DEFAULT_MAX_MESSAGES = 100
 
 
 def session_participants(state, include_user=False):
@@ -83,7 +58,8 @@ def _initialize_session(state: BookAgentState, include_user=False):
     tts_generate(opening, "president", os.path.join("dialogue_audio", "President_Introduction.wav"))
     append_line_to_file("book_club_conversation.txt", message)
     state.update(participants_name=names, book_summary=book_summary,
-                 topics_history=[topic], messages=[message], _routing={})
+                 topics_history=[topic], messages=[message], _routing={},
+                 turns_since_president=0, force_question=False)
     start_session(state, {"chat_model": PARTICIPANT_MODEL, "embedding_model": EMBEDDING_MODEL,
                           "turn_signal_style": TURN_SIGNAL_STYLE,
                           "personas": {name: PARTICIPANT_DESCRIPTIONS[name] for name in names if name in AGENTS}})
@@ -96,92 +72,102 @@ def init(state: BookAgentState):
     return _initialize_session(state, include_user=True)
 
 
-def assistant(state: BookAgentState):
-    # make the discussion run until 100 messages are reached
-    last=0 #Number of messages since the last president intervention
-    while len(state["messages"])<state.get("max_messages", 100):
-        next_speaker = choose_next(state,last)
-        evidence = {}
-        filepath = ""
-        
-        if next_speaker == "President": #Make the president speak and fine a new topic
-            last=0 
-            new_topic,new_message,filepath = president(
-                state["messages"],
-                state["book"],
-                state["topics_history"],
-                evidence=evidence,
-            )
-            state["topics_history"].append(new_topic)
-        
-        elif next_speaker==state["user_name"]: #Make the user speak
-            last+=1
-            new_message=user_call(state)
-            
-        
-        else: #Make a participant speak
-            last+=1
-            new_message, filepath = make_speak(
-                state["messages"],
-                state["book"],
-                state["topics_history"],
-                next_speaker,
-                user=state.get("user_name", ""),
-            )
-
-        state["messages"].append(new_message)
-        if next_speaker in AGENTS and AGENTS[next_speaker].turn_evidence:
-            evidence = AGENTS[next_speaker].turn_evidence[-1]
-        evidence = dict(evidence, routing=deepcopy(state.get("_routing", {})))
-        publish_turn(state, next_speaker, filepath, evidence)
-
-
-    
-    
-    return state
-
-
 def controlled_init(state: BookAgentState):
     return _initialize_session(state)
 
 
-def controlled_assistant(state: BookAgentState, last:int, force_question:Optional[bool]=False):
-    # make 1 message in the discussion
-    
-    
-    next_speaker = choose_next(state,last)
+def select_speaker(state):
+    speaker = choose_next(state, state.get('turns_since_president', 0))
+    if speaker not in state.get('participants_name', list(AGENTS)) + ['President', state.get('user_name', '')]:
+        raise ValueError('Router selected an unknown speaker')
+    return {'next_speaker': speaker, '_routing': deepcopy(state.get('_routing', {}))}
+
+
+def _speak(state, kind):
+    # Publish a copied message/topic list, so failed work cannot leak into caller state.
+    current = dict(state, messages=list(state['messages']), topics_history=list(state['topics_history']))
+    speaker = state['next_speaker']
     evidence = {}
-    
-    if next_speaker == "President": #Make the president speak and fine a new topic
-        last=0 
-        new_topic,new_message,filepath = president(
-            state["messages"],
-            state["book"],
-            state["topics_history"],
-            evidence=evidence,
-        )
-        state["topics_history"].append(new_topic)
-    
-        
-    
-    else: #Make a participant speak
-        last+=1
+    audio = ''
+    if kind == 'president':
+        topic, message, audio = president(current['messages'], current['book'], current['topics_history'], evidence=evidence)
+        current['topics_history'].append(topic)
+        count = 0
+    elif kind == 'user':
+        message = user_call(current)
+        count = current.get('turns_since_president', 0) + 1
+    else:
+        message, audio = make_speak(current['messages'], current['book'], current['topics_history'],
+                                    speaker, current.get('force_question', False), current.get('user_name', ''))
+        count = current.get('turns_since_president', 0) + 1
+        if speaker in AGENTS and AGENTS[speaker].turn_evidence:
+            evidence = AGENTS[speaker].turn_evidence[-1]
+    current['messages'].append(message)
+    publish_turn(current, speaker, audio, dict(evidence, routing=deepcopy(current.get('_routing', {}))))
+    current.update(turns_since_president=count, force_question=False, last_audio_path=audio)
+    return current
 
-        
-        new_message,filepath = make_speak(
-            state["messages"],
-            state["book"],
-            state["topics_history"],
-            next_speaker, force_question, state["user_name"]
-        )
 
-    state["messages"].append(new_message)
-    if next_speaker in AGENTS and AGENTS[next_speaker].turn_evidence:
-        evidence = AGENTS[next_speaker].turn_evidence[-1]
-    evidence = dict(evidence, routing=deepcopy(state.get("_routing", {})))
-    publish_turn(state, next_speaker, filepath, evidence)
+def president_speak(state): return _speak(state, 'president')
+def participant_speak(state): return _speak(state, 'participant')
+def user_speak(state): return _speak(state, 'user')
 
-    
-    
-    return state , next_speaker, filepath
 
+def route_speaker(state):
+    if state['next_speaker'] == 'President': return 'president_speak'
+    if state['next_speaker'] == state.get('user_name'): return 'user_speak'
+    return 'participant_speak'
+
+
+def should_continue(state):
+    return 'select_speaker' if len(state.get('messages', [])) < state.get('max_messages', DEFAULT_MAX_MESSAGES) else END
+
+
+def build_graph(mode):
+    if mode not in ('full', 'loop', 'turn'): raise ValueError('Unknown graph mode')
+    builder = StateGraph(BookAgentState)
+    builder.add_node('select_speaker', select_speaker)
+    nodes = {'president_speak': president_speak, 'participant_speak': participant_speak, 'user_speak': user_speak}
+    for name, node in nodes.items():
+        builder.add_node(name, node)
+        if mode == 'turn': builder.add_edge(name, END)
+        else: builder.add_conditional_edges(name, should_continue, {'select_speaker':'select_speaker', END:END})
+    builder.add_conditional_edges('select_speaker', route_speaker, {n:n for n in nodes})
+    if mode == 'full':
+        builder.add_node('init', init)
+        builder.add_edge(START, 'init')
+        builder.add_conditional_edges('init', should_continue, {'select_speaker':'select_speaker', END:END})
+    elif mode == 'loop':
+        builder.add_conditional_edges(START, should_continue, {'select_speaker':'select_speaker', END:END})
+    else: builder.add_edge(START, 'select_speaker')
+    return builder.compile()
+
+
+full_graph = build_graph('full')
+loop_graph = build_graph('loop')
+turn_graph = build_graph('turn')
+
+
+def _invoke(graph, state, **overrides):
+    limit = state.get('max_messages', DEFAULT_MAX_MESSAGES)
+    if type(limit) is not int or limit < 1: raise ValueError('max_messages must be a positive integer')
+    working = dict(state, **overrides)
+    # Only committed nodes reach callers. Earlier durable turns survive a later failure.
+    for chunk in graph.stream(working, config={'recursion_limit':limit*3+20}, stream_mode='updates'):
+        for node, update in chunk.items():
+            working.update(update)
+            if node != 'select_speaker': state.update(working)
+    return state
+
+
+def run_discussion(state):
+    return _invoke(full_graph, state)
+
+
+def assistant(state):
+    return _invoke(loop_graph, state)
+
+
+def controlled_assistant(state, last: int, force_question: Optional[bool] = False):
+    result = _invoke(turn_graph, state, turns_since_president=last, force_question=bool(force_question))
+    return result, result['next_speaker'], result.get('last_audio_path', '')

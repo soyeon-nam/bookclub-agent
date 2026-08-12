@@ -1,7 +1,5 @@
-from typing import Optional, TypedDict
-from langchain_core.messages import AnyMessage
-from typing_extensions import Annotated
-from langgraph.graph import add_messages
+from typing import TypedDict
+
 
 class BookAgentState(TypedDict, total=False):
     messages: list[str]
@@ -12,3 +10,8 @@ class BookAgentState(TypedDict, total=False):
     topics_history: list[str]
     max_messages: int
     _session: dict
+    _routing: dict
+    next_speaker: str
+    turns_since_president: int
+    force_question: bool
+    last_audio_path: str

@@ -1,6 +1,6 @@
 """Run an automated discussion (message limit includes the opening)."""
 import argparse
-from agent_main import init, assistant
+from agent_main import run_discussion
 from participant import get_all_participant_names
 
 
@@ -20,7 +20,7 @@ def main():
     }
     with open("book_club_conversation.txt", "w", encoding="utf-8"):
         pass
-    state = assistant(init(state))
+    state = run_discussion(state)
     print(f"Discussion complete: {len(state['messages'])} messages.")
 
 
