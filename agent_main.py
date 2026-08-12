@@ -11,7 +11,7 @@ from agentstate import BookAgentState
 from tools import make_speak, president, choose_next, user_call, append_line_to_file
 from participant import participant_creation, reset_agents, AGENTS, PARTICIPANT_DESCRIPTIONS, MODEL_NAME as PARTICIPANT_MODEL, TURN_SIGNAL_STYLE
 from session_log import start_session, record_turn, publish_turn
-from rag import EMBEDDING_MODEL, init_rag
+from rag import EMBEDDING_MODEL, init_rag, retrieval_mode
 from tts import tts_generate
 
 MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
@@ -61,7 +61,7 @@ def _initialize_session(state: BookAgentState, include_user=False):
                  topics_history=[topic], messages=[message], _routing={},
                  turns_since_president=0, force_question=False)
     start_session(state, {"chat_model": PARTICIPANT_MODEL, "embedding_model": EMBEDDING_MODEL,
-                          "turn_signal_style": TURN_SIGNAL_STYLE,
+                          "turn_signal_style": TURN_SIGNAL_STYLE, "retrieval_mode": retrieval_mode(),
                           "personas": {name: PARTICIPANT_DESCRIPTIONS[name] for name in names if name in AGENTS}})
     record_turn(state, "President", os.path.join("dialogue_audio", "President_Introduction.wav"),
                 {"book_summary": book_summary})

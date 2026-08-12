@@ -56,9 +56,17 @@ def _fetch_text(book_name: str) -> Optional[str]:
         ) from error
 
 
+def retrieval_mode():
+    mode = os.getenv('RAG_MODE', 'faiss').strip().lower()
+    if mode not in ('faiss', 'advanced'):
+        raise ValueError('RAG_MODE must be faiss or advanced')
+    return mode
+
+
 def init_rag(book_name: str) -> bool:
     """Reuse an index only when the source, model and chunk settings match."""
     global _vectorstore, index_info, _keywords
+    retrieval_mode()  # Reject invalid configuration before downloads or API calls.
     MEMO.clear()
     _vectorstore = None
     index_info = {}
@@ -107,16 +115,26 @@ def _get_llm(model=None):
 def _search_request(query, k):
     if type(k) is not int or k < 1:
         raise ValueError("k must be a positive integer")
+    mode = retrieval_mode()
     if _vectorstore is None or not query.strip():
         return None
     # Capture the actual book objects; a pending search cannot switch to a new book.
     store, keywords, identity = _vectorstore, _keywords, dict(index_info)
-    model = os.getenv("GPT_MODEL", "gpt-4o-mini")
-    key = cache_key('retrieval-v1', {'index':identity.get('cache_key'), 'model':model,
+    model = os.getenv("GPT_MODEL", "gpt-4o-mini") if mode == "advanced" else None
+    key = cache_key('retrieval-v2', {'index':identity.get('cache_key'), 'model':model, 'mode':mode,
                                     'query':query.strip(), 'k':k})
     def compute():
-        trace = {'status':'searching', 'cache_key':identity.get('cache_key'), 'model':model}
-        text = search(store, keywords, query.strip(), identity.get('book',''), k, lambda:_get_llm(model), trace)
+        trace = {'status':'searching', 'cache_key':identity.get('cache_key'), 'model':model, 'mode':mode}
+        if mode == 'faiss':
+            docs = store.similarity_search(query.strip(), k=k)
+            text = '\n---\n'.join(doc.page_content for doc in docs)
+            trace.update(original_query=query.strip(), rewritten_query=query.strip(),
+                         rewrite_status='skipped', rerank_status='skipped',
+                         selected_chunk_ids=[doc.metadata['chunk_id'] for doc in docs],
+                         candidates=[{'chunk_id':doc.metadata['chunk_id'],'text':doc.page_content} for doc in docs],
+                         retrieval_chat_calls=0)
+        else:
+            text = search(store, keywords, query.strip(), identity.get('book',''), k, lambda:_get_llm(model), trace)
         trace['status'] = 'passed'
         return {'text':text, 'trace':trace}
     return key, compute
