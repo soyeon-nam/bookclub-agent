@@ -1,6 +1,7 @@
 import ast
 import re
 from conversation_monitor import analyze, mentioned_participant
+import speaker_policy
 import rag
 import json
 import shutil
@@ -48,12 +49,14 @@ def choose_next(state, last) -> str:
              for turn in state.get("_session", {}).get("utterances", [])
              if turn.get("kind") == "participant"]
     quality = analyze(messages, participants, moves, state["book"])
-    decision = {"quality": quality, "signals": []}
+    decision = {"quality": quality, "signals": [],
+                "fairness": {"policy":dict(speaker_policy.POLICY), "candidates":speaker_policy.snapshot(messages,participants), "fallback":None}}
     def select(name, reason):
         state["_routing"] = dict(decision, selected=name, reason=reason)
         ops_event('turn_decision', session_id=state.get('_session', {}).get('session_id'),
                   turn_idx=len(messages), selected=name, reason=reason,
-                  signal_collection=decision.get('signal_collection', {}))
+                  signal_collection=decision.get('signal_collection', {}),
+                  fairness=decision['fairness'])
         return name
 
     if last_speaker == state.get("user_name"):
@@ -92,28 +95,11 @@ def choose_next(state, last) -> str:
                 signal = {"want_to_speak":False, "score":0,
                           "reason":type(signal_error).__name__, "target":"none"}
             collected.append(signal)
-    signals = []
-    for name, raw_signal in zip(candidates, collected):
-        signal = dict(raw_signal)
-        signal["speaker"] = name
-        prior = next((i for i, message in enumerate(reversed(messages))
-                      if message.split(":", 1)[0].strip() == name), len(messages)+1)
-        bonus = min(3, prior//2)
-        if quality["question_target"] == name:
-            bonus += 3
-        if quality["agreement_dominated"] and re.search(
-                r"\b(disagree|challenge|counter|wrong)\b|push back", signal.get("reason", ""), re.I):
-            bonus += 2
-        signal["base_score"] = signal["score"]
-        signal["score"] = min(10, signal["score"] + bonus)
-        signals.append(signal)
-    decision["signals"] = signals
-    ranked = sorted(signals, key=lambda item: (item["want_to_speak"], item["score"]), reverse=True)
-    if ranked[0]["want_to_speak"]:
-        return select(ranked[0]["speaker"], "ranked_interest_and_quality")
-    if quality["president_allowed"] and not quality["has_unanswered_question"]:
-        return select("President", "no_willing_participant_after_cooldown")
-    return select(ranked[0]["speaker"], "participant_fallback")
+    signals = [dict(raw, speaker=name) for name,raw in zip(candidates,collected)]
+    chosen, audit = speaker_policy.select(signals, messages, participants, quality)
+    decision['signals'] = signals
+    decision['fairness'] = audit
+    return select(chosen, 'fairness_policy' if chosen != 'President' else 'no_eligible_participant_after_cooldown')
 
 
 def _detect_repetition(messages: list[str], window: int = 8) -> str:
