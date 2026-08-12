@@ -848,17 +848,17 @@
       "direction": "diagnostic"
     },
     {
-      "id": "planned.question_response",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "questions.content_uptake",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R4.4"
       ],
       "failure_modes": [
         "FM-7"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "물음표를 포함한 AI 발언에서 내용 질문을 분류하고 사람/AI의 후속 참여를 판정한다. 끝부분 불완전 창·API 오류는 결측이며 인간 정답과의 일치는 미검증이다.",
+      "availability": "implemented",
       "direction": "diagnostic"
     },
     {

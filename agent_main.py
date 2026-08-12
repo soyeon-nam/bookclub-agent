@@ -97,6 +97,9 @@ def _speak(state, kind):
         message = user_call(current)
         count = current.get('turns_since_president', 0) + 1
     else:
+        quality = current.get('_routing', {}).get('quality', {})
+        drought = quality.get('question_drought', False) and not quality.get('has_unanswered_question', False)
+        current['force_question'] = current.get('force_question', False) or drought
         message, audio = make_speak(current['messages'], current['book'], current['topics_history'],
                                     speaker, current.get('force_question', False), current.get('user_name', ''))
         count = current.get('turns_since_president', 0) + 1

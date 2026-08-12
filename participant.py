@@ -385,7 +385,7 @@ class ParticipantAgent:
             f"Keep it short and natural. Do not speak too complexly. Use simple language. Short sentences, at most 60 spoken words."
         )
         if force:
-            prompt += f" You must ask {user} a question related to the current flow of discussion to make him interact more."
+            prompt += f" End with exactly ONE substantive question about the current discussion for {user or 'another participant'}. Use exactly one question mark at the end. Do not use a rhetorical or procedural question."
 
         prompt += (
             '\nReturn only one JSON object with exactly these string fields: '
@@ -402,7 +402,7 @@ class ParticipantAgent:
             'for that move. Only response will be spoken.'
         )
         messages = [self.system_message] + self.history[-self.MAX_HISTORY:] + [HumanMessage(content=prompt)]
-        structured, generation = generate_turn(self.llm, messages, allowed_moves, passages, self.stance)
+        structured, generation = generate_turn(self.llm, messages, allowed_moves, passages, self.stance, require_question=force)
         text, stance, move = structured["response"], structured["stance"], structured["move"]
         unchanged_count = count_unchanged(self.stance, stance, self.stance_unchanged_count)
         recent_moves = (self.recent_moves + [move])[-3:]

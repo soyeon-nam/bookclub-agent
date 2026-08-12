@@ -62,7 +62,7 @@ def quote_options(passages):
     return {'BOOK_QUOTE_'+str(i):part for i,part in enumerate(pieces)}
 
 
-def generate_turn(llm, messages, allowed_moves, passages='', prior_stance=''):
+def generate_turn(llm, messages, allowed_moves, passages='', prior_stance='', require_question=False):
     """One successful structured call; at most one schema repair, no partial state."""
     options = quote_options(passages)
     if options:
@@ -91,8 +91,10 @@ def generate_turn(llm, messages, allowed_moves, passages='', prior_stance=''):
             selector = value['evidence_quote'] if value['evidence_quote'] in options else None
             if selector is not None: value['evidence_quote'] = options[selector]
             grounding = validate_grounding(value, passages, prior_stance)
+            if require_question and (value['response'].count('?') != 1 or not value['response'].endswith('?')):
+                raise ValueError('response must end with exactly one substantive question and exactly one question mark')
             return value, {'format':'json', 'calls':attempt+1, 'validation_errors':errors,
-                           'grounding':grounding, 'quote_selector':selector}
+                           'grounding':grounding, 'quote_selector':selector, 'question_required':bool(require_question)}
         except (ValueError, TypeError, KeyError) as error:
             errors.append(str(error))
             attempts.append({"content":content, "error":str(error)})

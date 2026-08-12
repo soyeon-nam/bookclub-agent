@@ -43,7 +43,10 @@ def analyze(messages, participants, moves=(), book=''):
         if message.split(':', 1)[0].strip().lower() == 'president':
             break
         since_president += 1
+    recent_participant = [m for m in messages if m.split(':',1)[0].strip() in participants][-8:]
+    drought = len(recent_participant) == 8 and not any('?' in m.split(':',1)[-1] for m in recent_participant)
     return {
+        'question_drought': drought, 'question_drought_window': 8,
         'has_unanswered_question': has_question,
         'question_target': mentioned_participant(last_content, participants) if has_question else '',
         'repeated_keywords': repeated, 'is_repetitive': bool(repeated),
