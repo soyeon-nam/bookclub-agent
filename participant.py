@@ -15,16 +15,8 @@ load_dotenv()
 MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
 TURN_SIGNAL_STYLE = os.getenv("TURN_SIGNAL_STYLE", "balanced").strip().lower()
 
-CONVERSATION_MOVES = [
-    "AGREE_AND_EXTEND",    # agree with the point and add something new
-    "DISAGREE_SPECIFIC",   # disagree on a specific detail, not the whole argument
-    "ASK_QUESTION",        # ask a genuine question you're curious about
-    "SHARE_ANECDOTE",      # share a relevant personal experience or example from your domain
-    "REDIRECT",            # shift the angle or bring up a new aspect of the topic
-    "BUILD_ON",            # develop someone else's idea further
-    "CONCEDE_AND_REVISE",   # acknowledge a specific reason and revise the prior position
-    "REACT_EMOTIONALLY",   # express surprise, excitement, doubt, amusement, etc.
-]
+from dialogue_moves import GENERATION_MOVES, DEFINITIONS
+CONVERSATION_MOVES = list(GENERATION_MOVES)
 
 TURN_SIGNAL_PROMPTS = {
     "conservative": """
@@ -281,15 +273,16 @@ class ParticipantAgent:
         hint = f"Your prior stance: {self.stance or '(first contribution)'}\n"
         hint += f"Recent moves: {', '.join(self.recent_moves)}\n"
         if self.stance_unchanged_count >= 2:
-            hint += "Your position has repeated. Consider CONCEDE_AND_REVISE with a concrete reason, or defend it with new evidence.\n"
+            hint += "Your position has repeated. Consider CONCEDE with a concrete reason, or defend it with new evidence.\n"
         if len(self.recent_moves) >= 2 and all(
-                move in {"AGREE_AND_EXTEND", "BUILD_ON"} for move in self.recent_moves[-2:]):
-            allowed = ["DISAGREE_SPECIFIC", "ASK_QUESTION", "CONCEDE_AND_REVISE"]
+                move in {"EXTEND"} for move in self.recent_moves[-2:]):
+            allowed = ["CONTEST", "CLARIFY", "CONCEDE"]
         if last_content.rstrip().endswith("?"):
-            allowed = [move for move in allowed if move != "ASK_QUESTION"]
-            hint += "Answer the last question rather than asking another.\n"
+            hint += "A question is open: prefer ANSWER and address it substantively. Do not abandon it for a new topic.\n"
+        if not self.stance:
+            allowed = [move for move in allowed if move != "CONCEDE"]
         if force:
-            allowed = ["ASK_QUESTION"]
+            allowed = ["INITIATE", "CONTEST", "CLARIFY"]
         return allowed, hint
 
     def _analyze_user_turn(self, book_description, recent_historic, topic, content):
@@ -374,9 +367,9 @@ class ParticipantAgent:
             f"Current topic: {topic_discussion}\n"
             f"{turn_hint}"
             f"YOUR CONVERSATION MOVE: choose one of {', '.join(allowed_moves)}\n"
-            "Carry out that move: extend an idea, dispute a specific point, ask one question, "
-            "share an example, change angle, build on a point, or react emotionally as selected.\n"
-            f"{rag_section}"
+            "Choose the primary function, not its surface form. A question or anecdote can serve different functions.\n"
+            + "\n".join(move+": "+DEFINITIONS[move] for move in allowed_moves) + "\n"
+            + f"{rag_section}"
             f"{user_context}"
             f"{summary_section}"
             f"{repetition_warning}\n"
@@ -385,9 +378,9 @@ class ParticipantAgent:
             f"- You are free to disagree or challenge what was said."
             f"- Avoid academic tone and generic structures. Switch up phrasing."
             f"Now provide your next short reply to the discussion (one or two sentences). "
-            f"Your reply MUST respond directly to one or more specific ideas from the most recent message. "
-            f"Quote or paraphrase what they said to show you're actually engaging with them. "
-            f"Do not summarize. Do not start a new topic. Have your own opinion. "
+            f"For INITIATE, open a new angle on the book without pretending to respond to a prior claim. "
+            f"For other moves, engage a specific idea or question in the recent conversation. "
+            f"Do not abandon an open question. Do not summarize. Have your own opinion. "
             f"Do not repeat the same sentence structure. The response field must contain only spoken words, without your name. "
             f"Keep it short and natural. Do not speak too complexly. Use simple language. Short sentences, at most 60 spoken words."
         )
@@ -401,10 +394,10 @@ class ParticipantAgent:
             'the provided passages, or empty when none applies), '
             '"warrant" (one sentence explaining why the excerpt or example supports your claim), '
             '"revision_reason" (the concrete counterargument or evidence that changed your '
-            'previous position when move is CONCEDE_AND_REVISE; otherwise empty), '
+            'previous position when move is CONCEDE; otherwise empty), '
             '"response" (your short spoken reply, expressing the evidence-to-claim connection '
             'and acknowledging a changed position when revising). Decide the stance and move together '
-            'with the response. CONCEDE_AND_REVISE means you acknowledge WHICH specific '
+            'with the response. CONCEDE means you acknowledge WHICH specific '
             'counterargument or passage changed your mind; revision_reason MUST be nonempty '
             'for that move. Only response will be spoken.'
         )
@@ -419,7 +412,7 @@ class ParticipantAgent:
             "stance_before": self.stance, "stance_after": stance,
             "unchanged_count": unchanged_count, "recent_moves": list(recent_moves),
             "response_prompt": prompt, "structured": structured, "generation": generation,
-            "revision": {"revised": move == "CONCEDE_AND_REVISE", "from": self.stance,
+            "revision": {"revised": move == "CONCEDE", "from": self.stance,
                          "to": stance, "reason": structured["revision_reason"]},
         })
         self.turn_snapshots.append((self.stance, self.stance_unchanged_count, list(self.recent_moves)))

@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 from collections import Counter
 from . import metrics
+from dialogue_moves import planned_move, LEGACY_AMBIGUOUS
 
 
 def validate_session(session):
@@ -58,14 +59,15 @@ def automatic_metrics(session):
     distribution = {name: speakers.count(name) for name in sorted(configured)}
     entropy = metrics.turn_entropy(speakers)
     eligible = [i for i, turn in enumerate(session['utterances'][:-1])
-                if turn['kind']=='participant' and turn.get('evidence',{}).get('move')=='ASK_QUESTION']
-    answer_moves = {'BUILD_ON','AGREE_AND_EXTEND','DISAGREE_SPECIFIC','SHARE_ANECDOTE','REACT_EMOTIONALLY'}
+                if turn['kind']=='participant' and (turn.get('evidence',{}).get('move')=='ASK_QUESTION' or '?' in turn['text'])]
+    answer_moves = {'BUILD_ON','AGREE_AND_EXTEND','DISAGREE_SPECIFIC','SHARE_ANECDOTE','REACT_EMOTIONALLY','ANSWER'}
     answered = sum(session['utterances'][i+1].get('evidence',{}).get('move') in answer_moves for i in eligible)
     return {
         'counts': {'active_turns':len(session['utterances']), 'participant_turns':len(turns),
                    'discarded_turns':len(session.get('discarded',[])),
                    'with_retrieval':sum(bool(ctx.strip()) for ctx in contexts),
-                   'invalid_or_missing_move':sum(move not in metrics.VALID_MOVES for move in moves)},
+                   'invalid_or_missing_move':sum(planned_move(move) is None and move not in LEGACY_AMBIGUOUS for move in moves),
+                   'legacy_ambiguous_move':sum(move in LEGACY_AMBIGUOUS for move in moves)},
         'speaker_distribution':distribution,
         'distinct_1':metrics.distinct_n(texts,1), 'distinct_2':metrics.distinct_n(texts,2),
         'turn_entropy':entropy,
@@ -74,7 +76,8 @@ def automatic_metrics(session):
         'name_mention_rate':metrics.direct_address_rate(texts,sorted(configured)),
         'planned_rebuttal_rate':metrics.rebuttal_rate(moves),
         'planned_question_followup':{'eligible_questions':len(eligible),'answer_move_after':answered,
-                                     'rate':answered/len(eligible) if eligible else None},
+                                     'rate':answered/len(eligible) if eligible else None,
+                                     'question_detection':'question mark or legacy ASK_QUESTION; not semantic annotation'},
         'rolling_lexical_similarity':metrics.topic_drift_score(texts),
         'grounding_proxy':metrics.grounding_score(texts,contexts),
         'lexical_diversity_ttr':metrics.lexical_diversity(texts),

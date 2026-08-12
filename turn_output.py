@@ -38,12 +38,12 @@ def validate_grounding(value, passages, prior_stance):
     errors = []
     if value['evidence_quote'] and not matched:
         errors.append('evidence_quote must be copied from a provided passage without word changes')
-    revising = value['move'] == 'CONCEDE_AND_REVISE'
+    revising = value['move'] == 'CONCEDE'
     if revising and (not prior_stance or not value['revision_reason']
                      or normalize_quote(prior_stance).casefold() == normalize_quote(value['stance']).casefold()):
-        errors.append('CONCEDE_AND_REVISE requires a prior stance, a changed stance and a nonempty concrete revision_reason')
+        errors.append('CONCEDE requires a prior stance, a changed stance and a nonempty concrete revision_reason')
     if not revising and value['revision_reason']:
-        errors.append('revision_reason must be empty unless the move is CONCEDE_AND_REVISE')
+        errors.append('revision_reason must be empty unless the move is CONCEDE')
     if errors:
         raise ValueError('; '.join(errors))
     return {'status':'matched' if matched else 'not_provided', 'passage_indices':matched,

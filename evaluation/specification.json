@@ -454,7 +454,7 @@
       "failure_modes": [
         "FM-6"
       ],
-      "limitation": "생성기의 계획 라벨이다. 독립적인 텍스트 판정 없이 실현된 행위나 품질로 해석하지 않는다.",
+      "limitation": "생성기의 계획 라벨이다. 독립적인 텍스트 판정 없이 실현된 행위나 품질로 해석하지 않는다. 공통 7개 기능으로 집계하고 의미가 모호한 과거 질문·일화·감정 라벨은 임의 변환하지 않는다.",
       "availability": "computed",
       "direction": "diagnostic"
     },
@@ -482,7 +482,7 @@
       "failure_modes": [
         "FM-7"
       ],
-      "limitation": "생성기의 계획 라벨이다. 독립적인 텍스트 판정 없이 실현된 행위나 품질로 해석하지 않는다.",
+      "limitation": "생성기의 계획 라벨이다. 독립적인 텍스트 판정 없이 실현된 행위나 품질로 해석하지 않는다. 질문 표지는 물음표 또는 과거 ASK_QUESTION이며 의미적 내용 질문 판정이 아니다.",
       "availability": "computed",
       "direction": "diagnostic"
     },
@@ -981,6 +981,20 @@
       ],
       "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
       "availability": "not_available",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "moves.primary_function",
+      "kind": "model_judge",
+      "status": "unvalidated",
+      "requirements": [
+        "R6.2"
+      ],
+      "failure_modes": [
+        "FM-6"
+      ],
+      "limitation": "텍스트 기반 독립 모델 분류이며 인간 정답과의 일치나 판사 타당도는 미검증이다. 계획과 관찰 행위를 분리한다.",
+      "availability": "implemented",
       "direction": "diagnostic"
     }
   ]

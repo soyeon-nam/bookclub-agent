@@ -1,6 +1,7 @@
 """Stateless, reproducible quality signals from the current active conversation."""
 from collections import Counter
 import re
+from dialogue_moves import planned_move
 
 STOPWORDS = set('about their which would could should being there where other every those these after before still rather doesn think story scene character'.split())
 
@@ -30,8 +31,8 @@ def analyze(messages, participants, moves=(), book=''):
         frequency.update(word for word in sorted(words) if len(word) >= 5 and word not in ignored)
     repeated = [word for word, count in frequency.most_common() if count >= 4][:5]
     recent_speakers = [m.split(':', 1)[0].strip() for m in messages[-10:]]
-    recent_moves = list(moves)[-6:]
-    agreements = {'AGREE_AND_EXTEND', 'BUILD_ON'}
+    recent_moves = [planned_move(m) for m in list(moves)[-6:]]
+    agreements = {'EXTEND'}
     consecutive = 0
     for move in reversed(recent_moves):
         if move not in agreements:

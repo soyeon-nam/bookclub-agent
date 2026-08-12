@@ -2,6 +2,7 @@
 import math
 import re
 from collections import Counter
+from dialogue_moves import GENERATION_MOVES, planned_move
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -56,23 +57,20 @@ def normalized_turn_entropy(speakers: list[str]) -> float:
 # 3. Conversation Move Diversity
 # ──────────────────────────────────────────────────────────────────────────────
 
-VALID_MOVES = {
-    "AGREE_AND_EXTEND", "DISAGREE_SPECIFIC", "ASK_QUESTION",
-    "SHARE_ANECDOTE", "REDIRECT", "BUILD_ON", "REACT_EMOTIONALLY",
-}
+VALID_MOVES = set(GENERATION_MOVES)
 
 def move_diversity(moves: list[str]) -> dict:
     """
     conversation move 분포의 Shannon entropy + 각 move 비율.
     논문에서 "대화 행위 다양성(Dialogue Act Diversity)" 지표로 보고.
     """
-    valid = [m for m in moves if m in VALID_MOVES]
+    valid = [planned_move(m) for m in moves if planned_move(m) is not None]
     if not valid:
         return {"entropy": 0.0, "normalized": 0.0, "distribution": {}}
     freq = Counter(valid)
     total = len(valid)
     h = -sum((c / total) * math.log2(c / total) for c in freq.values())
-    norm = h / math.log2(len(VALID_MOVES))  # 최대 log2(7)로 정규화
+    norm = h / math.log2(len(VALID_MOVES))  # 생성 가능 행위 수로 정규화
     return {
         "entropy": round(h, 4),
         "normalized": round(norm, 4),
@@ -114,10 +112,10 @@ def rebuttal_rate(moves: list[str]) -> float:
     """
     if not moves:
         return 0.0
-    valid = [m for m in moves if m in VALID_MOVES]
+    valid = [planned_move(m) for m in moves if planned_move(m) is not None]
     if not valid:
         return 0.0
-    return round(valid.count("DISAGREE_SPECIFIC") / len(valid), 4)
+    return round(valid.count("CONTEST") / len(valid), 4)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
