@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 from collections import Counter
 from . import metrics
+from orality import statistics as oral_statistics
 from dialogue_moves import planned_move, LEGACY_AMBIGUOUS
 
 
@@ -83,6 +84,7 @@ def automatic_metrics(session):
         'lexical_diversity_ttr':metrics.lexical_diversity(texts),
         'mattr_50':metrics.moving_average_ttr(texts),
         'response_length_words':metrics.avg_response_length(texts),
+        'orality':oral_statistics(texts),
     }
 
 

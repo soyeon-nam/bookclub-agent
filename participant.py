@@ -16,6 +16,7 @@ MODEL_NAME = os.getenv("GPT_MODEL", "gpt-4o-mini")
 TURN_SIGNAL_STYLE = os.getenv("TURN_SIGNAL_STYLE", "balanced").strip().lower()
 
 from dialogue_moves import GENERATION_MOVES, DEFINITIONS
+from orality import MAX_SPOKEN_WORDS, spoken_style_enabled, style_instructions
 CONVERSATION_MOVES = list(GENERATION_MOVES)
 
 TURN_SIGNAL_PROMPTS = {
@@ -323,6 +324,7 @@ class ParticipantAgent:
     def get_speak(self, book_description: str, recent_historic: str,
                   topic_discussion: str, force: bool = False, user: str = "",
                   discussion_summary: str = "", repetition_warning: str = "") -> str:
+        spoken_style = spoken_style_enabled()
         if isinstance(recent_historic, (list, tuple)):
             last_message = str(recent_historic[-1]) if recent_historic else ""
         else:
@@ -382,8 +384,9 @@ class ParticipantAgent:
             f"For other moves, engage a specific idea or question in the recent conversation. "
             f"Do not abandon an open question. Do not summarize. Have your own opinion. "
             f"Do not repeat the same sentence structure. The response field must contain only spoken words, without your name. "
-            f"Keep it short and natural. Do not speak too complexly. Use simple language. Short sentences, at most 60 spoken words."
+            f"Keep it short and natural. Do not speak too complexly. Use simple language. Short sentences, at most {MAX_SPOKEN_WORDS} spoken words."
         )
+        prompt += "\n" + style_instructions(spoken_style)
         if force:
             prompt += f" End with exactly ONE substantive question about the current discussion for {user or 'another participant'}. Use exactly one question mark at the end. Do not use a rhetorical or procedural question."
 
@@ -412,6 +415,7 @@ class ParticipantAgent:
             "stance_before": self.stance, "stance_after": stance,
             "unchanged_count": unchanged_count, "recent_moves": list(recent_moves),
             "response_prompt": prompt, "structured": structured, "generation": generation,
+            "spoken_style_requested": spoken_style,
             "revision": {"revised": move == "CONCEDE", "from": self.stance,
                          "to": stance, "reason": structured["revision_reason"]},
         })

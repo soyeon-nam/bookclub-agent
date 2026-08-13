@@ -542,7 +542,7 @@
       "failure_modes": [
         "E5"
       ],
-      "limitation": "현재 평균·최소·최대·표준편차만 계산한다. p95·75단어 판정·청취성은 미측정이다.",
+      "limitation": "공백 기준 평균·최소·최대·표준편차다. orality의 단어 토큰화와 구분하며 청취성을 판정하지 않는다.",
       "availability": "computed",
       "direction": "diagnostic"
     },
@@ -876,31 +876,31 @@
       "direction": "diagnostic"
     },
     {
-      "id": "planned.length_p95",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "automatic.orality",
+      "kind": "surface",
+      "status": "descriptive",
       "requirements": [
         "R6.1"
       ],
       "failure_modes": [
         "E5"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "영어 중심 단어 수·선형 보간 p95·문장 길이와 표면 접속사 빈도다. 75단어는 설계 기준이며 검증된 청취 임계값이 아니다.",
+      "availability": "computed",
       "direction": "diagnostic"
     },
     {
-      "id": "planned.oral_register",
-      "kind": "planned",
-      "status": "unimplemented",
+      "id": "oral.register",
+      "kind": "model_judge",
+      "status": "unvalidated",
       "requirements": [
         "R6.3"
       ],
       "failure_modes": [
         "E5"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
-      "availability": "not_available",
+      "limitation": "발화 전체의 구어/문어 말투를 판단하는 텍스트 모델 판사다. 짧은 발언·친근한 도입·전문 어휘와 구어성을 동일시하지 않는다. 인간 청취·판사 일치는 미검증이다.",
+      "availability": "implemented",
       "direction": "diagnostic"
     },
     {

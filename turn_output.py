@@ -3,6 +3,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 from rag_search import parse_json
 import re
 import json
+from orality import MAX_SPOKEN_WORDS, word_count
 
 
 def validate_turn(content, allowed_moves):
@@ -91,10 +92,15 @@ def generate_turn(llm, messages, allowed_moves, passages='', prior_stance='', re
             selector = value['evidence_quote'] if value['evidence_quote'] in options else None
             if selector is not None: value['evidence_quote'] = options[selector]
             grounding = validate_grounding(value, passages, prior_stance)
+            constraints = []
             if require_question and (value['response'].count('?') != 1 or not value['response'].endswith('?')):
-                raise ValueError('response must end with exactly one substantive question and exactly one question mark')
+                constraints.append('response must end with exactly one substantive question and exactly one question mark')
+            if word_count(value['response']) > MAX_SPOKEN_WORDS:
+                constraints.append(f'response must contain at most {MAX_SPOKEN_WORDS} spoken words; shorten it without losing the claim and supporting reason')
+            if constraints: raise ValueError('; '.join(constraints))
             return value, {'format':'json', 'calls':attempt+1, 'validation_errors':errors,
-                           'grounding':grounding, 'quote_selector':selector, 'question_required':bool(require_question)}
+                           'grounding':grounding, 'quote_selector':selector, 'question_required':bool(require_question),
+                           'spoken_words':word_count(value['response']), 'spoken_word_limit':MAX_SPOKEN_WORDS}
         except (ValueError, TypeError, KeyError) as error:
             errors.append(str(error))
             attempts.append({"content":content, "error":str(error)})
