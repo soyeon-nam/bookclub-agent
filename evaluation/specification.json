@@ -827,7 +827,7 @@
       "failure_modes": [
         "FM-4"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "limitation": "원문 사실 충실성에 대한 짝지은 비교는 미구현이다. 검색 관련성·구체성 비교를 사실성 점수로 대체하지 않는다.",
       "availability": "not_available",
       "direction": "diagnostic"
     },
@@ -843,7 +843,7 @@
         "FM-6",
         "FM-12"
       ],
-      "limitation": "현재 미구현이며 점수나 검증 결과가 없다.",
+      "limitation": "전체 토론 궤적의 소화·입장 발전 비교는 미구현이다. 해당 비교는 같은 고정 맥락의 단일 응답 비교이며 전체 세션 효과를 측정하지 않는다.",
       "availability": "not_available",
       "direction": "diagnostic"
     },
@@ -994,6 +994,31 @@
         "FM-6"
       ],
       "limitation": "텍스트 기반 독립 모델 분류이며 인간 정답과의 일치나 판사 타당도는 미검증이다. 계획과 관찰 행위를 분리한다.",
+      "availability": "implemented",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "comparison.retrieval_relevance",
+      "kind": "experiment",
+      "status": "unvalidated",
+      "requirements": [],
+      "failure_modes": [
+        "FM-4"
+      ],
+      "limitation": "동일 의미 인덱스·질문에서 검색 후보의 관련성과 구체성을 비교한다. 원문 사실성 정답지·분할 효과·인간 판정·통계적 우위를 검증하지 않는다.",
+      "availability": "implemented",
+      "direction": "diagnostic"
+    },
+    {
+      "id": "comparison.fixed_context_response",
+      "kind": "experiment",
+      "status": "unvalidated",
+      "requirements": [],
+      "failure_modes": [
+        "FM-6",
+        "FM-12"
+      ],
+      "limitation": "같은 페르소나·고정 맥락·새 개인 기억의 RAG 유무 응답을 비교한다. 전체 세션 소화·입장 변화의 인과 효과를 측정하지 않는다.",
       "availability": "implemented",
       "direction": "diagnostic"
     }

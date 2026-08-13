@@ -39,8 +39,8 @@ def select(signals, messages, participants, quality):
         eligible=[];excluded={}
         for row in rows:
             name=row['speaker'];reason=None
-            if row['raw_fit'] is None: reason='unscored'
-            elif name==last_speaker and not relax_last: reason='last_speaker'
+            if name==last_speaker and not relax_last: reason='last_speaker'
+            elif row['raw_fit'] is None: reason='unscored'
             elif row['recent_count']>=POLICY['ban_count'] and not relax_count: reason='recent_frequency'
             elif row['raw_fit']<POLICY['fit_floor'] and not relax_fit: reason='low_fit'
             if reason: excluded[name]=reason
