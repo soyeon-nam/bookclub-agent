@@ -1,24 +1,17 @@
-ConversationAgent
+# ConversationAgent
 
-Quick setup
+## Quick setup
 
-1. Install Python dependencies:
+1. Install the dependencies in your project's Python environment:
 
+```sh
+python -m pip install -r requirements.txt
 ```
-pip install -r requirements.txt
+
+2. Download the voice models from the [Piper voice repository](https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US).
+
+3. Set your OpenAI API key in a `.env` file at the repository root:
+
+```dotenv
+OPENAI_API_KEY=your_api_key
 ```
-
-2. Download voice models from Google Drive and extract into the root of the repo.
-
-Google Drive link:
-
-https://drive.google.com/file/d/1UbvrR2Agxjdm3D0UhhX6nxNxYnT1TCSs/view?usp=drive_link
-
-3. Put your 
-
-OPENAI_API_KEY = 
-
-
-in a .env 
-
-
